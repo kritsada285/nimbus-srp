@@ -126,7 +126,7 @@ public class SRP6RoutinesTest extends TestCase {
 		random.nextBytes(s);
 		
 		// generate verifier
-		BigInteger x = SRP6Routines.computeX(newMessageDigest(), s, P);
+		BigInteger x = DefaultRoutines.getInstance().computeX(newMessageDigest(), s, P);
 		BigInteger v = SRP6Routines.computeVerifier(N, g, x);
 		// System.out.println("Verifier 'v': " + v.toString(16));
 		

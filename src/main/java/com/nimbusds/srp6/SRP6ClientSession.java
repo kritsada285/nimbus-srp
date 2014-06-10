@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 
 /**
  * Stateful client-side Secure Remote Password (SRP-6a) authentication session.
- * Handles the computing and storing of SRP-6a variables between the protocol 
+ * Handles computation and storage of the SRP-6a variables between the protocol
  * steps as well as timeouts.
  *
  * <p>Usage:
@@ -99,9 +99,9 @@ public class SRP6ClientSession extends SRP6Session {
 	
 	
 	/**
-	 * Custom routine for password key 'x' computation.
+	 * The routine for password key 'x' computation.
 	 */
-	private XRoutine xRoutine = null;
+	private XRoutine xRoutine = DefaultRoutines.getInstance();
 	
 	
 	/**
@@ -110,8 +110,9 @@ public class SRP6ClientSession extends SRP6Session {
 	 *
 	 * @param timeout The SRP-6a authentication session timeout in seconds. 
 	 *                If the authenticating counterparty (server or client) 
-	 *                fails to respond within the specified time the session
-	 *                will be closed. If zero timeouts are disabled.
+	 *                fails to respond within the specified time the
+	 *                session will be closed. If zero timeouts are
+	 *                disabled.
 	 */
 	public SRP6ClientSession(final int timeout) {
 	
@@ -134,23 +135,25 @@ public class SRP6ClientSession extends SRP6Session {
 	
 	
 	/**
-	 * Sets a custom routine for the password key 'x' computation. Note that
-	 * the custom routine must be set prior to {@link State#STEP_2}.
+	 * Sets the routine for the password key 'x' computation. It must be
+	 * set prior to {@link State#STEP_2}.
 	 *
-	 * @param routine The password key 'x' routine or {@code null} to use 
-	 *                the {@link SRP6Routines#computeX default one} instead.
+	 * @param xRoutine The password key 'x' routine. Must not be
+	 *                {@code null}.
 	 */
-	public void setXRoutine(final XRoutine routine) {
+	public void setXRoutine(final XRoutine xRoutine) {
+
+		if (xRoutine == null)
+			throw new IllegalArgumentException("The password key 'x' routine must not be null");
 	
-		xRoutine = routine;
+		this.xRoutine = xRoutine;
 	}
 	
 	
 	/**
-	 * Gets the custom routine for the password key 'x' computation.
+	 * Gets the routine for the password key 'x' computation.
 	 *
-	 * @return The routine instance or {@code null} if the default 
-	 *         {@link SRP6Routines#computeX default one} is used.
+	 * @return The password key 'x' routine.
 	 */
 	public XRoutine getXRoutine() {
 	
@@ -201,8 +204,8 @@ public class SRP6ClientSession extends SRP6Session {
 	
 	/**
 	 * Receives the password salt 's' and public value 'B' from the server.
-	 * The SRP-6a crypto parameters are also set. The session is incremented
-	 * to {@link State#STEP_2}.
+	 * The SRP-6a crypto parameters are also set. The session is
+	 * incremented to {@link State#STEP_2}.
 	 *
 	 * <p>Argument origin:
 	 * 
@@ -224,7 +227,9 @@ public class SRP6ClientSession extends SRP6Session {
 	 * @throws SRP6Exception         If the session has timed out or the 
 	 *                               public server value 'B' is invalid.
 	 */
-	public SRP6ClientCredentials step2(final SRP6CryptoParams config, final BigInteger s, final BigInteger B)
+	public SRP6ClientCredentials step2(final SRP6CryptoParams config,
+					   final BigInteger s,
+					   final BigInteger B)
 		throws SRP6Exception {
 	
 		// Check arguments
@@ -267,19 +272,10 @@ public class SRP6ClientSession extends SRP6Session {
 		
 		
 		// Compute the password key 'x'
-		if (xRoutine != null) {
-			
-			// With custom routine
-			x = xRoutine.computeX(config.getMessageDigestInstance(), 
-			                     s.toByteArray(),
-					     userID.getBytes(Charset.forName("UTF-8")),
-					     password.getBytes(Charset.forName("UTF-8")));
-					     
-		} else {
-			// With default rotine
-			x = SRP6Routines.computeX(digest, s.toByteArray(), password.getBytes(Charset.forName("UTF-8")));
-			digest.reset();
-		}
+		x = xRoutine.computeX(config.getMessageDigestInstance(),
+			              s.toByteArray(),
+				      userID.getBytes(Charset.forName("UTF-8")),
+				      password.getBytes(Charset.forName("UTF-8")));
 		
 		// Generate client private and public values
 		a = SRP6Routines.generatePrivateValue(config.N, random);

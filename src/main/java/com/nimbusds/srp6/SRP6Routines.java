@@ -15,8 +15,9 @@ import java.security.SecureRandom;
  *
  * <ul>
  *     <li>The computation of the password key 'x' is modified to omit the user 
- *         identity 'I' in order to allow for server-side user identity renaming
- *         as well as authentication with multiple alternate identities. 
+ *         identity 'I' in order to allow for server-side user identity
+ *         renaming as well as authentication with multiple alternate
+ *         identities.
  *     <li>The evidence messages 'M1' and 'M2' are computed according to Tom 
  *         Wu's paper "SRP-6: Improvements and refinements to the Secure Remote 
  *         Password protocol", table 5, from 2002.
@@ -45,7 +46,7 @@ public class SRP6Routines {
 	                                  final BigInteger N, 
 	                                  final BigInteger g) {
 	
-		return hashPaddedPair(digest, N, N, g);
+		return BigIntegerUtils.hashPaddedPair(digest, N, N, g);
 	}
 	
 	
@@ -69,39 +70,13 @@ public class SRP6Routines {
 	
 	
 	/**
-	 * Computes x = H(s | H(P))
-	 *
-	 * <p>Note that this method differs from the RFC 5054 recommendation 
-	 * which includes the user identity 'I', i.e. x = H(s | H(I | ":" | P))
-	 *
-	 * @param digest   The hash function 'H'. Must not be {@code null}.
-	 * @param salt     The salt 's'. Must not be {@code null}.
-	 * @param password The user password 'P'. Must not be {@code null}.
-	 *
-	 * @return The resulting 'x' value.
-	 */
-	public static BigInteger computeX(final MessageDigest digest,
-	                                  final byte[] salt,
-	                                  final byte[] password) {         
-	                                    
-		byte[] output = digest.digest(password);
-
-		digest.update(salt);
-		digest.update(output);
-		
-		return new BigInteger(1, digest.digest());
-	}
-	
-	
-	/**
 	 * Computes a verifier v = g^x (mod N)
 	 *
 	 * <p>Specification: RFC 5054.
 	 *
 	 * @param N The prime parameter 'N'. Must not be {@code null}.
 	 * @param g The generator parameter 'g'. Must not be {@code null}.
-	 * @param x The password key 'x', see {@link #computeX}. Must not be 
-	 *          {@code null}.
+	 * @param x The password key 'x'. Must not be {@code null}.
 	 *
 	 * @return The resulting verifier 'v'.
 	 */
@@ -219,7 +194,7 @@ public class SRP6Routines {
 	                                  final BigInteger B) {
 	                                   
 	                                
-		return hashPaddedPair(digest, N, A, B);
+		return BigIntegerUtils.hashPaddedPair(digest, N, A, B);
 	}
 	
 	
@@ -232,8 +207,7 @@ public class SRP6Routines {
 	 * @param N The prime parameter 'N'. Must not be {@code null}.
 	 * @param g The generator parameter 'g'. Must not be {@code null}.
 	 * @param k The SRP-6a multiplier 'k'. Must not be {@code null}.
-	 * @param x The 'x' value, see {@link #computeX}. Must not be 
-	 *          {@code null}.
+	 * @param x The 'x' value. Must not be {@code null}.
 	 * @param u The random scrambling parameter 'u'. Must not be 
 	 *          {@code null}.
 	 * @param a The private client value 'a'. Must not be {@code null}.
@@ -335,88 +309,11 @@ public class SRP6Routines {
 	}
 	
 	
-	/**
-	 * Hashes two padded values 'n1' and 'n2' where the total length is
-	 * determined by the size of N.
-	 *
-	 * <p>H(PAD(n1) | PAD(n2))
-	 *
-	 * @param digest The hash function 'H'. Must not be {@code null}.
-	 * @param N      Its size determines the pad length. Must not be 
-	 *               {@code null}.
-	 * @param n1     The first value to pad and hash.
-	 * @param n2     The second value to pad and hash.
-	 *
-	 * @return The resulting hashed padded pair.
-	 */
-	protected static BigInteger hashPaddedPair(final MessageDigest digest,
-	                                           final BigInteger N,
-	                                           final BigInteger n1,
-	                                           final BigInteger n2) {
-	                                           
-		final int padLength = (N.bitLength() + 7) / 8;
-		
-		byte[] n1_bytes = getPadded(n1, padLength);
 
-		byte[] n2_bytes = getPadded(n2, padLength);
+	
 
-		digest.update(n1_bytes);
-		digest.update(n2_bytes);
-		
-		byte[] output = digest.digest();
-		
-		return new BigInteger(1, output);
-	}
 	
-	
-	/**
-	 * Pads a big integer with leading zeros up to the specified length.
-	 *
-	 * @param n      The big integer to pad. Must not be {@code null}.
-	 * @param length The required length of the padded big integer as a
-	 *               byte array.
-	 *
-	 * @return The padded big integer as a byte array.
-	 */
-	protected static byte[] getPadded(final BigInteger n, final int length) {
-	
-		byte[] bs = bigIntegerToUnsignedByteArray(n);
-		
-		if (bs.length < length) {
-		
-			byte[] tmp = new byte[length];
-			System.arraycopy(bs, 0, tmp, length - bs.length, bs.length);
-			bs = tmp;
-		}
-		
-		return bs;
-	}
-	
-	
-	/**
-	 * Returns the specified big integer as an unsigned byte array.
-	 *
-	 * @param value The big integer, must not be {@code null}.
-	 *
-	 * @return A byte array without a leading zero if present in the signed
-	 *         encoding.
-	 */
-	protected static byte[] bigIntegerToUnsignedByteArray(final BigInteger value) {
-	
-		byte[] bytes = value.toByteArray();
-        
-		// remove leading zero if any
-		if (bytes[0] == 0) {
 
-			byte[] tmp = new byte[bytes.length - 1];
-
-			System.arraycopy(bytes, 1, tmp, 0, tmp.length);
-
-			return tmp;
-		}
-        
-		return bytes;
-	}
 	
 	
 	/**

@@ -25,7 +25,7 @@ public abstract class SRP6Session {
 	
 	
 	/**
-	 * Message digest (not thread-safe).
+	 * The message digest (not thread-safe).
 	 */
 	protected MessageDigest digest;
 	
@@ -106,21 +106,21 @@ public abstract class SRP6Session {
 	
 	
 	/**
-	 * Custom routine for the client evidence message 'M1' computation.
+	 * Routine for the client evidence message 'M1' computation.
 	 */
-	protected ClientEvidenceRoutine clientEvidenceRoutine = null;
+	protected ClientEvidenceRoutine clientEvidenceRoutine = DefaultRoutines.getInstance();
 	
 	
 	/**
-	 * Custom routine for the server evidence message 'M2' computation.
+	 * Routine for the server evidence message 'M2' computation.
 	 */
-	protected ServerEvidenceRoutine serverEvidenceRoutine = null;
+	protected ServerEvidenceRoutine serverEvidenceRoutine = DefaultRoutines.getInstance();
 
 
 	/**
-	 * Custom routine for the hashed keys 'u' computation.
+	 * Routine for the hashed keys 'u' computation.
 	 */
-	protected URoutine hashedKeysRoutine = null;
+	protected URoutine hashedKeysRoutine = DefaultRoutines.getInstance();
 
 
 	/**
@@ -231,26 +231,26 @@ public abstract class SRP6Session {
 	
 	
 	/**
-	 * Sets a custom routine to compute the client evidence message 'M1'.
-	 * Note that the custom routine must be set prior to 
-	 * {@link SRP6ClientSession.State#STEP_2} or
+	 * Sets a routine to compute the client evidence message 'M1'. Must be
+	 * set prior to {@link SRP6ClientSession.State#STEP_2} or
 	 * {@link SRP6ServerSession.State#STEP_2}.
 	 *
-	 * @param routine The client evidence message 'M1' routine or 
-	 *                {@code null} to use the default 
-	 *                {@link SRP6Routines#computeClientEvidence}.
+	 * @param m1Routine The client evidence message 'M1' routine. Must not
+	 *                  be {@code null}.
 	 */
-	public void setClientEvidenceRoutine(final ClientEvidenceRoutine routine) {
+	public void setClientEvidenceRoutine(final ClientEvidenceRoutine m1Routine) {
+
+		if (m1Routine == null)
+			throw new IllegalArgumentException("The client evidence message 'M1' routine must not be null");
 	
-		clientEvidenceRoutine = routine;
+		clientEvidenceRoutine = m1Routine;
 	}
 	
 	
 	/**
-	 * Gets the custom routine to compute the client evidence message 'M1'.
+	 * Gets the routine to compute the client evidence message 'M1'.
 	 *
-	 * @return The routine instance or {@code null} if the default 
-	 *         {@link SRP6Routines#computeClientEvidence} is used.
+	 * @return The client evidence message 'M1' routine.
 	 */
 	public ClientEvidenceRoutine getClientEvidenceRoutine() {
 	
@@ -259,26 +259,26 @@ public abstract class SRP6Session {
 	
 	
 	/**
-	 * Sets a custom routine to compute the server evidence message 'M2'.
-	 * Note that the custom routine must be set prior to 
-	 * {@link SRP6ClientSession.State#STEP_3} or
+	 * Sets a routine to compute the server evidence message 'M2'. Must be
+	 * set prior to {@link SRP6ClientSession.State#STEP_3} or
 	 * {@link SRP6ServerSession.State#STEP_2}.
 	 *
-	 * @param routine The server evidence message 'M2' routine or 
-	 *                {@code null} to use the default 
-	 *                {@link SRP6Routines#computeServerEvidence}.
+	 * @param m2Routine The server evidence message 'M2' routine. Must not
+	 *                  be {@code null}.
 	 */
-	public void setServerEvidenceRoutine(final ServerEvidenceRoutine routine) {
+	public void setServerEvidenceRoutine(final ServerEvidenceRoutine m2Routine) {
+
+		if (m2Routine == null)
+			throw new IllegalArgumentException("The server evidence message 'M2' routine must not be null");
 	
-		serverEvidenceRoutine = routine;
+		serverEvidenceRoutine = m2Routine;
 	}
 	
 	
 	/**
-	 * Gets the custom routine to compute the server evidence message 'M2'.
+	 * Gets the routine to compute the server evidence message 'M2'.
 	 *
-	 * @return The routine instance or {@code null} if the default 
-	 *         {@link SRP6Routines#computeServerEvidence} is used.
+	 * @return The server evidence message 'M2' routine.
 	 */
 	public ServerEvidenceRoutine getServerEvidenceRoutine() {
 	
@@ -299,17 +299,18 @@ public abstract class SRP6Session {
 
 
 	/**
-	 * Sets a custom routine to compute hashed keys 'u' a 'H(A | B)'. Note
-	 * that the custom routine must be set prior to
-	 * {@link SRP6ServerSession.State#STEP_2}.
+	 * Sets a routine to compute the hashed keys 'u' as 'H(A | B)'. Must be
+	 * set prior to {@link SRP6ServerSession.State#STEP_2}.
 	 * 
-	 * @param hashedKeysRoutine The hashed keys 'u' routine or {@code null}
-	 *                          to use the default
-	 *                          {@link SRP6Routines#computeU}.
+	 * @param uRoutine The hashed keys 'u' routine. Must not be
+	 *                 {@code null}.
 	 */
-	public void setHashedKeysRoutine(final URoutine hashedKeysRoutine) {
+	public void setHashedKeysRoutine(final URoutine uRoutine) {
 
-		this.hashedKeysRoutine = hashedKeysRoutine;
+		if (uRoutine == null)
+			throw new IllegalArgumentException("The hased keys 'u' routine must not be null");
+
+		this.hashedKeysRoutine = uRoutine;
 	}
 
 
@@ -389,8 +390,7 @@ public abstract class SRP6Session {
 		if (doHash) {
 			digest.reset();
 			return new BigInteger(digest.digest(S.toByteArray()));
-		}
-		else {
+		} else {
 			return S;
 		}
 	}

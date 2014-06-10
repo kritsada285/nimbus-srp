@@ -12,7 +12,8 @@ import java.security.MessageDigest;
  *
  * <p>This routine can be passed to the {@link SRP6VerifierGenerator} and
  * {@link SRP6ClientSession} to replace the
- * {@link SRP6Routines#computeX default routine} x = H(s | H(P)).
+ * {@link com.nimbusds.srp6.DefaultRoutines#computeX default routine}
+ * x = H(s | H(P)).
  *
  * @author Vladimir Dzhuvinov
  */

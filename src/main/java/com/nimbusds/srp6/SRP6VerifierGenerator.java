@@ -23,9 +23,9 @@ public class SRP6VerifierGenerator {
 	
 	
 	/**
-	 * Custom routine for password key 'x' computation.
+	 * The routine for password key 'x' computation.
 	 */
-	private XRoutine xRoutine = null;
+	private XRoutine xRoutine = DefaultRoutines.getInstance();
 	
 	
 	/**
@@ -74,23 +74,24 @@ public class SRP6VerifierGenerator {
 	
 	
 	/**
-	 * Sets a custom routine for the password key 'x' computation.
+	 * Sets the routine for the password key 'x' computation.
 	 *
-	 * @param routine The password key 'x' routine or {@code null} to use 
-	 *                the {@link SRP6Routines#computeX default one}
-	 *                instead.
+	 * @param XRoutine The password key 'x' routine. Must not be
+	 *                 {@code null}.
 	 */
-	public void setXRoutine(final XRoutine routine) {
+	public void setXRoutine(final XRoutine XRoutine) {
+
+		if (xRoutine == null)
+			throw new IllegalArgumentException("The password key 'x' routine must not be null");
 	
-		xRoutine = routine;
+		xRoutine = XRoutine;
 	}
 	
 	
 	/**
-	 * Gets the custom routine for the password key 'x' computation.
+	 * Gets the routine for the password key 'x' computation.
 	 *
-	 * @return The routine instance or {@code null} if the default 
-	 *         {@link SRP6Routines#computeX default one} is used.
+	 * @return The password key 'x' routine.
 	 */
 	public XRoutine getXRoutine() {
 	
@@ -101,9 +102,7 @@ public class SRP6VerifierGenerator {
 	/**
 	 * Generates a new verifier 'v' from the specified parameters.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N). If a custom
-	 * {@link #setXRoutine 'x' computation routine} is set it will be used
-	 * instead of the {@link SRP6Routines#computeX default one}.
+	 * <p>The verifier is computed as v = g^x (mod N).
 	 *
 	 * <p>Tip: To convert a string to a byte array you can use 
 	 * {@code String.getBytes()} or 
@@ -127,20 +126,11 @@ public class SRP6VerifierGenerator {
 			throw new IllegalArgumentException("The password 'P' must not be null");
 	
 		// Compute the password key 'x'
-		BigInteger x;
-		
-		if (xRoutine != null) {
-			
-			// With custom routine
-			x = xRoutine.computeX(config.getMessageDigestInstance(), 
-			                      salt,
-					      userID,
-					      password);		     
-		}
-		else {
-			// With default rotine
-			x = SRP6Routines.computeX(config.getMessageDigestInstance(), salt, password);
-		}
+		BigInteger x = xRoutine.computeX(
+			config.getMessageDigestInstance(),
+			salt,
+			userID,
+			password);
 		
 		return SRP6Routines.computeVerifier(config.N, config.g, x);
 	}
@@ -149,9 +139,7 @@ public class SRP6VerifierGenerator {
 	/**
 	 * Generates a new verifier 'v' from the specified parameters.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N). If a custom
-	 * {@link #setXRoutine 'x' computation routine} is set it will be used
-	 * instead of the {@link SRP6Routines#computeX default one}.
+	 * <p>The verifier is computed as v = g^x (mod N).
 	 *
 	 * @param salt     The salt 's'. Must not be {@code null}.
 	 * @param userID   The user identity 'I', as an UTF-8 encoded string. 

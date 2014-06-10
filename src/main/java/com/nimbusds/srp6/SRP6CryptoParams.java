@@ -78,13 +78,13 @@ public class SRP6CryptoParams {
 	
 	
 	/**
-	 * Returns an SRP-6a crypto parameters instance with precomputed 'N' and
-	 * 'g' values and the specified hash algorithm 'H'.
+	 * Returns an SRP-6a crypto parameters instance with precomputed 'N'
+	 * and 'g' values and the specified hash algorithm 'H'.
 	 *
 	 * @param bitsize The preferred prime number bitsize. Must exist as a 
 	 *                precomputed constant.
-	 * @param H       The preferred hash algorithm. Must be supported by the 
-	 *                default security provider of the underlying Java 
+	 * @param H       The preferred hash algorithm. Must be supported by
+	 *                the default security provider of the underlying Java
 	 *                runtime.
 	 *
 	 * @return The matching SRP-6a crypto parameters instance, or

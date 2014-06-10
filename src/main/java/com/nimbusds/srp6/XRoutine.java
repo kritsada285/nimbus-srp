@@ -10,8 +10,9 @@ import java.security.MessageDigest;
  * this value is required by the verifier 'v' generator as well as by the 
  * authenticating {@link SRP6ClientSession client session}.
  *
- * <p>If you don't want to employ the {@link SRP6Routines#computeX default routine} 
- * for computing 'x' you can use this interface to define your own. Remember to 
+ * <p>If you don't want to employ the
+ * {@link com.nimbusds.srp6.DefaultRoutines#computeX default routine} for
+ * computing 'x' you can use this interface to define your own. Remember to
  * make sure that exactly the same routine is used to generate the verifier 'v' 
  * and by client authentication sessions later, else authentication will fail.
  *

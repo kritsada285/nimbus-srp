@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 /**
  * Stateful server-side Secure Remote Password (SRP-6a) authentication session.
- * Handles the computing and storing of SRP-6a variables between the protocol 
+ * Handles computation and storage of the SRP-6a variables between the protocol
  * steps as well as timeouts.
  *
  * <p>Usage:
