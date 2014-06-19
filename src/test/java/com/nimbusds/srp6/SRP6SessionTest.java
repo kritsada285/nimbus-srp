@@ -43,16 +43,16 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(SRP6ClientSession.State.INIT, client.getState());
 		assertEquals(SRP6ServerSession.State.INIT, server.getState());
 
-		assertNull(client.getXRoutine());
-		assertNull(client.getClientEvidenceRoutine());
-		assertNull(client.getServerEvidenceRoutine());
-		assertNull(client.getHashedKeysRoutine());
+		assertEquals(DefaultRoutines.getInstance(), client.getXRoutine());
+		assertEquals(DefaultRoutines.getInstance(), client.getClientEvidenceRoutine());
+		assertEquals(DefaultRoutines.getInstance(), client.getServerEvidenceRoutine());
+		assertEquals(DefaultRoutines.getInstance(), client.getHashedKeysRoutine());
 		assertEquals(0, client.getTimeout());
 
 		assertEquals(config, server.getCryptoParams());
-		assertNull(server.getClientEvidenceRoutine());
-		assertNull(server.getServerEvidenceRoutine());
-		assertNull(server.getHashedKeysRoutine());
+		assertEquals(DefaultRoutines.getInstance(), server.getClientEvidenceRoutine());
+		assertEquals(DefaultRoutines.getInstance(), server.getServerEvidenceRoutine());
+		assertEquals(DefaultRoutines.getInstance(), server.getHashedKeysRoutine());
 		assertEquals(0, server.getTimeout());
 		
 		
@@ -66,7 +66,7 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(username, client.getUserID());
 
 		assertEquals(s, server.getSalt());
-		
+
 		// System.out.println("Client -> Server: Username: " + username);
 		// System.out.println("Server -> Client: B: " + B.toString(16));
 		// System.out.println("Server -> Client: salt: " + new

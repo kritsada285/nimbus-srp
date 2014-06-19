@@ -7,8 +7,7 @@ import java.security.NoSuchAlgorithmException;
 
 
 /**
- * Default singleton implementations of the SRP 'x', 'u', 'M1' and 'M2'
- * routines.
+ * Default implementations of the SRP 'x', 'u', 'M1' and 'M2' routines.
  *
  * @author Vladimir Dzhuvinov
  */

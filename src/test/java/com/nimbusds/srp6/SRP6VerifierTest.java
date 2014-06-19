@@ -2,6 +2,8 @@ package com.nimbusds.srp6;
 
 
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
 
 
 import junit.framework.*;
@@ -15,27 +17,27 @@ import junit.framework.*;
 public class SRP6VerifierTest extends TestCase {
 	
 	
-	public void testConstructors() {
+	public void testConstructors()
+		throws Exception {
 	
 		SRP6CryptoParams config = SRP6CryptoParams.getInstance();
 		
 		SRP6VerifierGenerator gen = new SRP6VerifierGenerator(config);
 		
 		final byte[] salt = SRP6VerifierGenerator.generateRandomSalt();
-		// System.out.println("Salt: " + new BigInteger(salt));
+		final byte[] uid = "alice".getBytes(Charset.forName("UTF-8"));
+		final byte[] password = "secret".getBytes(Charset.forName("UTF-8"));
 		
-		final String userID = "alice";
-		final String password = "secret";
-		
-		BigInteger targetV = SRP6Routines.computeVerifier(config.N, 
-		                                              config.g, 
-							      SRP6Routines.computeX(config.getMessageDigestInstance(), 
-							      salt, 
-							      password.getBytes()));
-	
-		assertEquals(targetV, gen.generateVerifier(new BigInteger(salt), password));
-		assertEquals(targetV, gen.generateVerifier(new BigInteger(salt), userID, password));
-		assertEquals(targetV, gen.generateVerifier(salt, password.getBytes()));
-		assertEquals(targetV, gen.generateVerifier(salt, userID.getBytes(), password.getBytes()));
+		BigInteger targetV = SRP6Routines.computeVerifier(
+			config.N,
+			config.g,
+			DefaultRoutines.getInstance().computeX(
+				MessageDigest.getInstance("SHA-1"),
+				salt,
+				uid,
+				password));
+
+		assertEquals(targetV, gen.generateVerifier(salt, password));
+		assertEquals(targetV, gen.generateVerifier(salt, uid, password));
 	}
 }

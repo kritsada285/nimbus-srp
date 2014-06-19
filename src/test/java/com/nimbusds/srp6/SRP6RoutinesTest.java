@@ -117,6 +117,9 @@ public class SRP6RoutinesTest extends TestCase {
 		SecureRandom random = new SecureRandom();
 		BigInteger N = SRP6CryptoParams.N_256;
 		BigInteger g = SRP6CryptoParams.g_common;
+
+		// username
+		byte[] I = "alice".getBytes();
 	
 		// password
 		byte[] P = "secret".getBytes();
@@ -126,7 +129,7 @@ public class SRP6RoutinesTest extends TestCase {
 		random.nextBytes(s);
 		
 		// generate verifier
-		BigInteger x = DefaultRoutines.getInstance().computeX(newMessageDigest(), s, P);
+		BigInteger x = DefaultRoutines.getInstance().computeX(newMessageDigest(), s, I, P);
 		BigInteger v = SRP6Routines.computeVerifier(N, g, x);
 		// System.out.println("Verifier 'v': " + v.toString(16));
 		
@@ -163,6 +166,9 @@ public class SRP6RoutinesTest extends TestCase {
 		SecureRandom random = new SecureRandom();
 		BigInteger N = SRP6CryptoParams.N_256;
 		BigInteger g = SRP6CryptoParams.g_common;
+
+		// username
+		byte[] I = "alice".getBytes();
 	
 		// good + bad password
 		byte[] P = "secret".getBytes();
@@ -173,8 +179,8 @@ public class SRP6RoutinesTest extends TestCase {
 		random.nextBytes(s);
 		
 		// generate verifier
-		BigInteger x = SRP6Routines.computeX(newMessageDigest(), s, P);
-		BigInteger xBad = SRP6Routines.computeX(newMessageDigest(), s, Pbad);
+		BigInteger x = DefaultRoutines.getInstance().computeX(newMessageDigest(), s, I, P);
+		BigInteger xBad = DefaultRoutines.getInstance().computeX(newMessageDigest(), s, I, Pbad);
 		BigInteger v = SRP6Routines.computeVerifier(N, g, x);
 		// System.out.println("Verifier 'v': " + v.toString(16));
 		

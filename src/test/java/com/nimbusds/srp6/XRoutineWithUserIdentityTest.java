@@ -35,7 +35,7 @@ public class XRoutineWithUserIdentityTest extends TestCase {
 		// Create verifier and set alt routine x = H(s | H(I | ":" | P))
 		
 		SRP6VerifierGenerator gen = new SRP6VerifierGenerator(config);
-		assertNull(gen.getXRoutine());
+		assertNotNull(gen.getXRoutine());
 		
 		XRoutine altX = new XRoutineWithUserIdentity();
 		gen.setXRoutine(altX);
