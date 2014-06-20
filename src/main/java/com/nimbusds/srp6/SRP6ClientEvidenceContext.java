@@ -10,7 +10,7 @@ import java.math.BigInteger;
  *
  * @author Vladimir Dzhuvinov
  */
-public class SRP6ClientEvidenceContext {
+public final class SRP6ClientEvidenceContext {
 
 
 	/**

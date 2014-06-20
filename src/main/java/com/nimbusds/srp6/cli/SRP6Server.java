@@ -4,7 +4,7 @@ package com.nimbusds.srp6.cli;
 import java.io.IOException;
 import java.math.BigInteger;
 
-import com.nimbusds.srp6.BigIntegerUtils;
+import com.nimbusds.srp6.util.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6CryptoParams;
 import com.nimbusds.srp6.SRP6ServerSession;
 

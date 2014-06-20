@@ -87,5 +87,8 @@ version 1.5.0 (2014-06-04)
 	* Adds interface for custom computeU routine.
 	* Switches project license to Apache 2.0.
 
+version 2.0 (2014-06-xx)
+    * Refactors the SRP-6a routine interfaces.
+    * Ranames interfaces, classes and methods for better clarity.
 
 [EOF]

@@ -2,31 +2,29 @@ package com.nimbusds.srp6;
 
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 
 /**
- * The crypto parameters for the SRP-6a protocol. These must be agreed between
- * client and server before authentication and consist of a large safe prime 
- * 'N', a corresponding generator 'g' and a hash function algorithm 'H'.
+ * The SRP-6a crypto parameters consisting of a large safe prime 'N' and a
+ * corresponding generator 'g'. These, in addition to the
+ * {@link com.nimbusds.srp6.HashRoutine principal hash algorithm 'H'}, must be
+ * agreed between client and server prior to authentication.
  *
- * <p>The practical approach is to have the server manage these and make them 
- * available to clients on request. This way, the client does not need to 
- * anticipate or otherwise keep track of which parameters are used for which 
- * users or servers; it only needs to verify their validity, which can be done 
- * mathematically or by simple table lookup.
+ * <p>The practical approach is to have the server manage the 'N' and 'g'
+ * crypto parameters and make them available to clients on request. This way,
+ * the client does not need to anticipate or otherwise keep track of which
+ * parameters are used for which users or servers; it only needs to verify
+ * their validity, which can be done mathematically or by simple table lookup.
  *
  * <p>For convenience this class includes a set of precomputed parameters,
  * obtained from the SRP-6a demo at http://srp.stanford.edu/demo/demo.html.
  *
  * @author Vladimir Dzhuvinov
  */
-public class SRP6CryptoParams {
+public final class SRP6CryptoParams {
 
 	
 	// Pre-computed primes 'N' for a set of bitsizes
-
 	
 	/**
 	 * Precomputed safe 256-bit prime 'N', as decimal.
@@ -72,80 +70,48 @@ public class SRP6CryptoParams {
 	
 	
 	/**
-	 * The hash algorithm 'H'.
-	 */
-	public final String H;
-	
-	
-	/**
 	 * Returns an SRP-6a crypto parameters instance with precomputed 'N'
-	 * and 'g' values and the specified hash algorithm 'H'.
+	 * and 'g' values.
 	 *
 	 * @param bitsize The preferred prime number bitsize. Must exist as a 
 	 *                precomputed constant.
-	 * @param H       The preferred hash algorithm. Must be supported by
-	 *                the default security provider of the underlying Java
-	 *                runtime.
 	 *
 	 * @return The matching SRP-6a crypto parameters instance, or
 	 *         {@code null} if no matching constants or hash algorithm
 	 *         provider could be found.
 	 */
-	public static SRP6CryptoParams getInstance(final int bitsize, final String H) {
-	
-		if (H == null || H.isEmpty())
-			throw new IllegalArgumentException("Undefined hash algorithm 'H'");
-			
-		if (bitsize == 256)
-			return new SRP6CryptoParams(N_256, g_common, H);
-		
-		else if (bitsize == 512)
-			return new SRP6CryptoParams(N_512, g_common, H);
-			
-		else if (bitsize == 768)
-			return new SRP6CryptoParams(N_768, g_common, H);
-			
-		else if (bitsize == 1024)
-			return new SRP6CryptoParams(N_1024, g_common, H);
-		
-		else
-			return null;
+	public static SRP6CryptoParams getInstance(final int bitsize) {
+
+		switch (bitsize) {
+
+			case 256:
+				return new SRP6CryptoParams(N_256, g_common);
+
+			case 512:
+				return new SRP6CryptoParams(N_512, g_common);
+
+			case 768:
+				return new SRP6CryptoParams(N_768, g_common);
+
+			case 1024:
+				return new SRP6CryptoParams(N_1024, g_common);
+
+			default:
+				return null;
+		}
 	}
 	
 	
 	/**
 	 * Returns an SRP-6a crypto parameters instance with precomputed 
-	 * 512-bit prime 'N', matching 'g' value and "SHA-1" hash algorithm.
+	 * 512-bit prime 'N' and matching 'g' value.
 	 *
-	 * @return SRP-6a crypto parameters instance with 512-bit prime 'N',
-	 *         matching 'g' value and "SHA-1" hash algorithm.
+	 * @return SRP-6a crypto parameters instance with 512-bit prime 'N' and
+	 *         matching 'g' value.
 	 */
 	public static SRP6CryptoParams getInstance() {
 	
-		return getInstance(512, "SHA-1");
-	}
-	
-	
-	/**
-	 * Checks if the specified hash algorithm 'H' is supported by the 
-	 * default security provider of the underlying Java runtime.
-	 *
-	 * @param H The hash algorithm to check, e.g. "SHA-1".
-	 *
-	 * @return {@code true} if the hash algorightm is supported, else
-	 *         {@code false}.
-	 */
-	public static boolean isSupportedHashAlgorithm(final String H) {
-	
-		try {
-			MessageDigest.getInstance(H);
-			
-			return true; // success
-		
-		} catch (NoSuchAlgorithmException e) {
-		
-			return false; // not supported
-		}
+		return getInstance(512);
 	}
 	
 	
@@ -158,11 +124,8 @@ public class SRP6CryptoParams {
 	 *          {@code null}.
 	 * @param g A corresponding generator for the 'g' parameter. Must not be
 	 *          {@code null}.
-	 * @param H A hash algorithm. Must by supported by the default security
-	 *          provider of the underlying Java runtime. Must not be 
-	 *          {@code null}.
 	 */
-	public SRP6CryptoParams(final BigInteger N, final BigInteger g, final String H) {
+	public SRP6CryptoParams(final BigInteger N, final BigInteger g) {
 	
 		if (N == null)
 			throw new IllegalArgumentException("The prime parameter 'N' must not be null");
@@ -173,33 +136,5 @@ public class SRP6CryptoParams {
 			throw new IllegalArgumentException("The generator parameter 'g' must not be null");
 		
 		this.g = g;
-		
-		
-		if (H == null || H.isEmpty())
-			throw new IllegalArgumentException("Undefined hash algorithm 'H'");
-
-		if (! isSupportedHashAlgorithm(H))
-			throw new IllegalArgumentException("Unsupported hash algorithm 'H': " + H);
-		
-		this.H = H;
-	}
-	
-	
-	/**
-	 * Returns a new message digest instance for the hash algorithm 'H'.
-	 *
-	 * @return A new message digest instance or {@code null} if not 
-	 *         supported by the default security provider of the underlying
-	 *         Java runtime.
-	 */
-	public MessageDigest getMessageDigestInstance() {
-	
-		try {
-			return MessageDigest.getInstance(H);
-		
-		} catch (NoSuchAlgorithmException e) {
-		
-			return null;
-		}
 	}
 }

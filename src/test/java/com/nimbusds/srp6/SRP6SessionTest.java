@@ -43,7 +43,7 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(SRP6ClientSession.State.INIT, client.getState());
 		assertEquals(SRP6ServerSession.State.INIT, server.getState());
 
-		assertEquals(DefaultRoutines.getInstance(), client.getXRoutine());
+		assertEquals(DefaultRoutines.getInstance(), client.getPasswordKeyRoutine());
 		assertEquals(DefaultRoutines.getInstance(), client.getClientEvidenceRoutine());
 		assertEquals(DefaultRoutines.getInstance(), client.getServerEvidenceRoutine());
 		assertEquals(DefaultRoutines.getInstance(), client.getHashedKeysRoutine());

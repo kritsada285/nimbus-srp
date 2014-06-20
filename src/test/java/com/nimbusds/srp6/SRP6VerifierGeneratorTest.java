@@ -3,7 +3,6 @@ package com.nimbusds.srp6;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
 
 
 import junit.framework.*;
@@ -14,7 +13,7 @@ import junit.framework.*;
  *
  * @author Vladimir Dzhuvinov
  */
-public class SRP6VerifierTest extends TestCase {
+public class SRP6VerifierGeneratorTest extends TestCase {
 	
 	
 	public void testConstructors()
@@ -32,7 +31,6 @@ public class SRP6VerifierTest extends TestCase {
 			config.N,
 			config.g,
 			DefaultRoutines.getInstance().computeX(
-				MessageDigest.getInstance("SHA-1"),
 				salt,
 				uid,
 				password));

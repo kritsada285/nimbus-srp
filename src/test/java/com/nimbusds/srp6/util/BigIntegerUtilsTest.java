@@ -1,4 +1,4 @@
-package com.nimbusds.srp6;
+package com.nimbusds.srp6.util;
 
 
 import java.math.BigInteger;
@@ -7,14 +7,14 @@ import junit.framework.TestCase;
 
 
 /**
- * Tests the BigInteger to and from hex utilities.
+ * Tests the BigInteger utility class.
  *
  * @author Vladimir Dzhuvinov
  */
 public class BigIntegerUtilsTest extends TestCase {
 
 
-	public void testRoundTripConversion() {
+	public void testRoundTripHexConversion() {
 
 		BigInteger bigInteger = new BigInteger("1234567890");
 

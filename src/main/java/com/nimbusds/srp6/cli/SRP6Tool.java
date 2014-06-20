@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import java.math.BigInteger;
 
-import com.nimbusds.srp6.BigIntegerUtils;
+import com.nimbusds.srp6.util.BigIntegerUtils;
 import com.nimbusds.srp6.SRP6CryptoParams;
 
 
@@ -27,11 +27,8 @@ public abstract class SRP6Tool {
 	
 	/**
 	 * Creates a new SRP-6a command-line tool.
-	 *
-	 * @throws IOException On console I/O exception.
 	 */
-	public SRP6Tool()
-		throws IOException {
+	public SRP6Tool() {
 	
 		// Prepare console input
 		InputStreamReader stdin = new InputStreamReader(System.in);
@@ -168,12 +165,13 @@ public abstract class SRP6Tool {
 			System.out.println(prefix + "Selected generator 'g' (hex): " + BigIntegerUtils.toHex(g));
 			System.out.println();
 		}
+
+		// TODO
+		//System.out.print(prefix + "Enter hash algorithm 'H' [SHA-1]: ");
+		//String H = readInput("SHA-1");
+		//System.out.println();
 		
-		System.out.print(prefix + "Enter hash algorithm 'H' [SHA-1]: ");
-		String H = readInput("SHA-1");
-		System.out.println();
-		
-		return new SRP6CryptoParams(N, g, H);
+		return new SRP6CryptoParams(N, g);
 	}
 	
 	

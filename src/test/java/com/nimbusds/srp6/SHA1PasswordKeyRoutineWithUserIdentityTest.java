@@ -3,6 +3,7 @@ package com.nimbusds.srp6;
 
 import java.math.BigInteger;
 
+import com.nimbusds.srp6.util.BigIntegerUtils;
 import junit.framework.TestCase;
 
 
@@ -11,7 +12,7 @@ import junit.framework.TestCase;
  *
  * @author Vladimir Dzhuvinov
  */
-public class XRoutineWithUserIdentityTest extends TestCase {
+public class SHA1PasswordKeyRoutineWithUserIdentityTest extends TestCase {
 	
 	
 	public void test() {
@@ -22,9 +23,8 @@ public class XRoutineWithUserIdentityTest extends TestCase {
 		// for test vectors
 		BigInteger N = BigIntegerUtils.fromHex("115b8b692e0e045692cf280b436735c77a5a9e8a9e7ed56c965f87db5b2a2ece3");
 		BigInteger g = BigIntegerUtils.fromHex("2");
-		String H = "SHA-1";
 		
-		SRP6CryptoParams config = new SRP6CryptoParams(N, g, H);
+		SRP6CryptoParams config = new SRP6CryptoParams(N, g);
 	
 		
 		// Credentials
@@ -35,11 +35,11 @@ public class XRoutineWithUserIdentityTest extends TestCase {
 		// Create verifier and set alt routine x = H(s | H(I | ":" | P))
 		
 		SRP6VerifierGenerator gen = new SRP6VerifierGenerator(config);
-		assertNotNull(gen.getXRoutine());
+		assertNotNull(gen.getPasswordKeyRoutine());
 		
-		XRoutine altX = new XRoutineWithUserIdentity();
-		gen.setXRoutine(altX);
-		assertEquals(altX, gen.getXRoutine());
+		PasswordKeyRoutine altX = new SHA1PasswordKeyRoutineWithUserIdentity();
+		gen.setPasswordKeyRoutine(altX);
+		assertEquals(altX, gen.getPasswordKeyRoutine());
 		
 		BigInteger v = gen.generateVerifier(salt, userID, password);
 		// System.out.println("computed v: " + v);

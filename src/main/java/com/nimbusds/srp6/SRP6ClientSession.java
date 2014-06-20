@@ -16,7 +16,7 @@ import java.nio.charset.Charset;
  *     <li>Create a new SRP-6a client session for each authentication attempt.
  *     <li>If you wish to use custom routines for the password key 'x', the
  *         server evidence message 'M1', and / or the client evidence message
- *        'M2' specify them at this point.
+ *        'M2', specify them at this point.
  *     <li>Proceed to {@link #step1 step one} by recording the input user
  *         identity 'I' (submitted to the server) and password 'P'.
  *     <li>Proceed to {@link #step2 step two} on receiving the password salt
@@ -101,7 +101,7 @@ public class SRP6ClientSession extends SRP6Session {
 	/**
 	 * The routine for password key 'x' computation.
 	 */
-	private XRoutine xRoutine = DefaultRoutines.getInstance();
+	private PasswordKeyRoutine xRoutine = DefaultRoutines.getInstance();
 	
 	
 	/**
@@ -141,7 +141,7 @@ public class SRP6ClientSession extends SRP6Session {
 	 * @param xRoutine The password key 'x' routine. Must not be
 	 *                {@code null}.
 	 */
-	public void setXRoutine(final XRoutine xRoutine) {
+	public void setPasswordKeyRoutine(final PasswordKeyRoutine xRoutine) {
 
 		if (xRoutine == null)
 			throw new IllegalArgumentException("The password key 'x' routine must not be null");
@@ -155,7 +155,7 @@ public class SRP6ClientSession extends SRP6Session {
 	 *
 	 * @return The password key 'x' routine.
 	 */
-	public XRoutine getXRoutine() {
+	public PasswordKeyRoutine getPasswordKeyRoutine() {
 	
 		return xRoutine;
 	}
@@ -211,13 +211,15 @@ public class SRP6ClientSession extends SRP6Session {
 	 * 
 	 * <ul>
 	 *     <li>From server: password salt 's', public value 'B'.
-	 *     <li>From server or pre-agreed: crypto parameters prime 'N', 
-	 *         generator 'g' and hash function 'H'.
+	 *     <li>From server or pre-agreed: crypto parameters prime 'N' and
+	 *         generator 'g'.
 	 * </ul>
 	 *
-	 * @param config The SRP-6a crypto parameters. Must not be {@code null}.
-	 * @param s      The password salt 's'. Must not be {@code null}.
-	 * @param B      The public server value 'B'. Must not be {@code null}.
+	 * @param cryptoParams The SRP-6a crypto parameters. Must not be
+	 *                     {@code null}.
+	 * @param s            The password salt 's'. Must not be {@code null}.
+	 * @param B            The public server value 'B'. Must not be
+	 *                     {@code null}.
 	 *
 	 * @return The client credentials consisting of the client public key 
 	 *         'A' and the client evidence message 'M1'.
@@ -227,22 +229,16 @@ public class SRP6ClientSession extends SRP6Session {
 	 * @throws SRP6Exception         If the session has timed out or the 
 	 *                               public server value 'B' is invalid.
 	 */
-	public SRP6ClientCredentials step2(final SRP6CryptoParams config,
+	public SRP6ClientCredentials step2(final SRP6CryptoParams cryptoParams,
 					   final BigInteger s,
 					   final BigInteger B)
 		throws SRP6Exception {
 	
 		// Check arguments
-		if (config == null)
+		if (cryptoParams == null)
 			throw new IllegalArgumentException("The SRP-6a crypto parameters must not be null");
 
-		this.config = config;
-		
-		digest = config.getMessageDigestInstance();
-		
-		if (digest == null)
-			throw new IllegalArgumentException("Unsupported hash algorithm 'H': " + config.H);
-		
+		this.cryptoParams = cryptoParams;
 		
 		if (s == null)
 			throw new IllegalArgumentException("The salt 's' must not be null");
@@ -267,44 +263,31 @@ public class SRP6ClientSession extends SRP6Session {
 		
 		
 		// Check B validity
-		if (! SRP6Routines.isValidPublicValue(config.N, B))
+		if (! SRP6Routines.isValidPublicValue(cryptoParams.N, B))
 			throw new SRP6Exception("Bad server public value 'B'", SRP6Exception.CauseType.BAD_PUBLIC_VALUE);
 		
 		
 		// Compute the password key 'x'
-		x = xRoutine.computeX(config.getMessageDigestInstance(),
-			              s.toByteArray(),
+		x = xRoutine.computeX(s.toByteArray(),
 				      userID.getBytes(Charset.forName("UTF-8")),
 				      password.getBytes(Charset.forName("UTF-8")));
 		
 		// Generate client private and public values
-		a = SRP6Routines.generatePrivateValue(config.N, random);
-		digest.reset();
+		a = SRP6Routines.generatePrivateValue(cryptoParams.N, random);
 		
-		A = SRP6Routines.computePublicClientValue(config.N, config.g, a);
+		A = SRP6Routines.computePublicClientValue(cryptoParams.N, cryptoParams.g, a);
 		
 		
 		// Compute the session key
-		k = SRP6Routines.computeK(digest, config.N, config.g);
-		digest.reset();
+		k = SRP6Routines.computeK(getHashRoutine().getMessageDigestInstance(), cryptoParams.N, cryptoParams.g);
 		
-		u = SRP6Routines.computeU(digest, config.N, A, B);
-		digest.reset();
+		u = getHashedKeysRoutine().computeU(cryptoParams, new URoutineContext(A, B));
 		
-		S = SRP6Routines.computeSessionKey(config.N, config.g, k, x, u, a, B);
+		S = SRP6Routines.computeSessionKey(cryptoParams.N, cryptoParams.g, k, x, u, a, B);
 		
 		// Compute the client evidence message
-		if (clientEvidenceRoutine != null) {
-		
-			// With custom routine
-			SRP6ClientEvidenceContext ctx = new SRP6ClientEvidenceContext(userID, s, A, B, S);
-			M1 = clientEvidenceRoutine.computeClientEvidence(config, ctx);
-
-		} else {
-			// With default routine
-			M1 = SRP6Routines.computeClientEvidence(digest, A, B, S);
-			digest.reset();
-		}
+		SRP6ClientEvidenceContext ctx = new SRP6ClientEvidenceContext(userID, s, A, B, S);
+		M1 = getClientEvidenceRoutine().computeClientEvidence(cryptoParams, ctx);
 
 		state = State.STEP_2;
 		
@@ -354,24 +337,12 @@ public class SRP6ClientSession extends SRP6Session {
 	
 
 		// Compute the own server evidence message 'M2'
-		BigInteger computedM2;
-		
-		if (serverEvidenceRoutine != null) {
-		
-			// With custom routine
-			SRP6ServerEvidenceContext ctx = new SRP6ServerEvidenceContext(A, M1, S);
-			
-			computedM2 = serverEvidenceRoutine.computeServerEvidence(config, ctx);
+		SRP6ServerEvidenceContext ctx = new SRP6ServerEvidenceContext(A, M1, S);
+		BigInteger computedM2 = getServerEvidenceRoutine().computeServerEvidence(cryptoParams, ctx);
 
-		} else {
-			// With default routine
-			computedM2 = SRP6Routines.computeServerEvidence(digest, A, M1, S);
-		}
 		
 		if (! computedM2.equals(M2))
 			throw new SRP6Exception("Bad server credentials", SRP6Exception.CauseType.BAD_CREDENTIALS);
-
-		digest.reset();
 	
 		state = State.STEP_3;
 		

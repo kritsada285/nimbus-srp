@@ -3,13 +3,11 @@ package com.nimbusds.srp6;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 
 
 /**
  * Generator of password verifier 'v' values.
- *
- * <p>{@link SRP6Routines#generateRandomSalt} may be used to create a random
- * salt 's' of a specified byte size.
  *
  * @author Vladimir Dzhuvinov
  */
@@ -17,59 +15,55 @@ public class SRP6VerifierGenerator {
 
 
 	/**
-	 * The crypto configuration.
+	 * The crypto parameters.
 	 */
-	private SRP6CryptoParams config;
+	private final SRP6CryptoParams cryptoParams;
 	
 	
 	/**
-	 * The routine for password key 'x' computation.
+	 * The password key 'x' routine.
 	 */
-	private XRoutine xRoutine = DefaultRoutines.getInstance();
+	private PasswordKeyRoutine xRoutine = DefaultRoutines.getInstance();
 	
 	
 	/**
 	 * Creates a new generator of password verifier 'v' values.
 	 *
-	 * @param config The SRP-6a crypto parameters configuration. Must not 
-	 *                be {@code null}.
+	 * @param cryptoParams The SRP-6a crypto parameters. Must not be
+	 *                     {@code null}.
 	 */
-	public SRP6VerifierGenerator(final SRP6CryptoParams config) {
+	public SRP6VerifierGenerator(final SRP6CryptoParams cryptoParams) {
 	
-		if (config == null)
+		if (cryptoParams == null)
 			throw new IllegalArgumentException("The SRP-6a crypto parameters must not be null");
 		
-		this.config = config;
+		this.cryptoParams = cryptoParams;
 	}
 	
 	
 	/**
-	 * Generates a random salt 's'. 
-	 *
-	 * <p>This method is a shortcut to
-	 * {@link SRP6Routines#generateRandomSalt}.
+	 * Generates a random salt 's'.
 	 *
 	 * @param numBytes The number of bytes the salt 's' must have.
 	 *
 	 * @return The salt 's' as a byte array.
 	 */
 	public static byte[] generateRandomSalt(final int numBytes) {
-	
-		return SRP6Routines.generateRandomSalt(numBytes);
+
+		byte[] salt = new byte[numBytes];
+		new SecureRandom().nextBytes(salt);
+		return salt;
 	}
 	
 	
 	/**
-	 * Generates a random 16-byte salt 's'. 
-	 *
-	 * <p>This method is a shortcut to
-	 * {@link SRP6Routines#generateRandomSalt}.
+	 * Generates a random 16-byte salt 's'.
 	 *
 	 * @return The salt 's' as a byte array.
 	 */
 	public static byte[] generateRandomSalt() {
 	
-		return SRP6Routines.generateRandomSalt(16);
+		return generateRandomSalt(16);
 	}
 	
 	
@@ -79,7 +73,7 @@ public class SRP6VerifierGenerator {
 	 * @param XRoutine The password key 'x' routine. Must not be
 	 *                 {@code null}.
 	 */
-	public void setXRoutine(final XRoutine XRoutine) {
+	public void setPasswordKeyRoutine(final PasswordKeyRoutine XRoutine) {
 
 		if (xRoutine == null)
 			throw new IllegalArgumentException("The password key 'x' routine must not be null");
@@ -93,7 +87,7 @@ public class SRP6VerifierGenerator {
 	 *
 	 * @return The password key 'x' routine.
 	 */
-	public XRoutine getXRoutine() {
+	public PasswordKeyRoutine getPasswordKeyRoutine() {
 	
 		return xRoutine;
 	}
@@ -102,10 +96,9 @@ public class SRP6VerifierGenerator {
 	/**
 	 * Generates a new verifier 'v' from the specified parameters.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N).
+	 * <p>The verifier is computed as <code>v = g^x (mod N)</code>.
 	 *
-	 * <p>Tip: To convert a string to a byte array you can use 
-	 * {@code String.getBytes()} or 
+	 * <p>Tip: To convert a string to a byte array you can use
 	 * {@code String.getBytes(java.nio.charset.Charset)}. To convert a big
 	 * integer to a byte array you can use {@code BigInteger.toByteArray()}.
 	 *
@@ -127,19 +120,18 @@ public class SRP6VerifierGenerator {
 	
 		// Compute the password key 'x'
 		BigInteger x = xRoutine.computeX(
-			config.getMessageDigestInstance(),
 			salt,
 			userID,
 			password);
 		
-		return SRP6Routines.computeVerifier(config.N, config.g, x);
+		return SRP6Routines.computeVerifier(cryptoParams.N, cryptoParams.g, x);
 	}
 	
 	
 	/**
 	 * Generates a new verifier 'v' from the specified parameters.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N).
+	 * <p>The verifier is computed as <code>v = g^x (mod N)</code>.
 	 *
 	 * @param salt     The salt 's'. Must not be {@code null}.
 	 * @param userID   The user identity 'I', as an UTF-8 encoded string. 
@@ -156,7 +148,6 @@ public class SRP6VerifierGenerator {
 		
 		if (userID != null)
 			userIDBytes = userID.getBytes(Charset.forName("UTF-8"));
-	
 		
 		return generateVerifier(salt.toByteArray(), userIDBytes, password.getBytes(Charset.forName("UTF-8")));
 	}
@@ -166,12 +157,12 @@ public class SRP6VerifierGenerator {
 	 * Generates a new verifier 'v' from the specified parameters with the
 	 * user identifier 'I' omitted.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N). If a custom
-	 * {@link #setXRoutine 'x' computation routine} is set it must omit the
-	 * user identity 'I' as well.
+	 * <p>The verifier is computed as <code>v = g^x (mod N)</code>.
 	 *
-	 * <p>Tip: To convert a string to a byte array you can use 
-	 * {@code String.getBytes()} or 
+	 * <p>If a custom {@link #setPasswordKeyRoutine 'x' computation routine} is set
+	 * it must omit the user identity 'I' as well.
+	 *
+	 * <p>Tip: To convert a string to a byte array you can use
 	 * {@code String.getBytes(java.nio.charset.Charset)}. To convert a big
 	 * integer to a byte array you can use {@code BigInteger.toByteArray()}.
 	 *
@@ -190,9 +181,10 @@ public class SRP6VerifierGenerator {
 	 * Generates a new verifier 'v' from the specified parameters with the
 	 * user identifier 'I' omitted.
 	 *
-	 * <p>The verifier is computed as v = g^x (mod N). If a custom
-	 * {@link #setXRoutine 'x' computation routine} is set it must omit the
-	 * user identity 'I' as well.
+	 * <p>The verifier is computed as <code>v = g^x (mod N)</code>.
+	 *
+	 * <p>If a custom {@link #setPasswordKeyRoutine 'x' computation routine} is set
+	 * it must omit the user identity 'I' as well.
 	 *
 	 * @param salt     The salt 's'. Must not be {@code null}.
 	 * @param password The user password 'P', as an UTF-8 encoded string. 

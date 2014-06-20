@@ -96,26 +96,22 @@ public class SRP6ServerSession extends SRP6Session {
 	 * Creates a new server-side SRP-6a authentication session and sets its 
 	 * state to {@link State#INIT}.
 	 *
-	 * @param config  The SRP-6a crypto parameters configuration. Must not 
-	 *                be {@code null}.
-	 * @param timeout The SRP-6a authentication session timeout in seconds. 
-	 *                If the authenticating counterparty (server or client) 
-	 *                fails to respond within the specified time the session
-	 *                will be closed. If zero timeouts are disabled.
+	 * @param cryptoParams The SRP-6a crypto parameters. Must not be
+	 *                     {@code null}.
+	 * @param timeout      The SRP-6a authentication session timeout in
+	 *                     seconds. If the authenticating counterparty
+	 *                     (server or client) fails to respond within the
+	 *                     specified time the session will be closed. If
+	 *                     zero timeouts are disabled.
 	 */
-	public SRP6ServerSession(final SRP6CryptoParams config, final int timeout) {
+	public SRP6ServerSession(final SRP6CryptoParams cryptoParams, final int timeout) {
 	
 		super(timeout);
 		
-		if (config == null)
+		if (cryptoParams == null)
 			throw new IllegalArgumentException("The SRP-6a crypto parameters must not be null");
 
-		this.config = config;
-		
-		digest = config.getMessageDigestInstance();
-		
-		if (digest == null)
-			throw new IllegalArgumentException("Unsupported hash algorithm 'H': " + config.H);
+		this.cryptoParams = cryptoParams;
 
 		state = State.INIT;
 		
@@ -127,12 +123,12 @@ public class SRP6ServerSession extends SRP6Session {
 	 * Creates a new server-side SRP-6a authentication session and sets its 
 	 * state to {@link State#INIT}. Session timeouts are disabled.
 	 *
-	 * @param config  The SRP-6a crypto parameters configuration. Must not 
-	 *                be {@code null}.
+	 * @param cryptoParams The SRP-6a crypto parameters. Must not be
+	 *                     {@code null}.
 	 */
-	public SRP6ServerSession(final SRP6CryptoParams config) {
+	public SRP6ServerSession(final SRP6CryptoParams cryptoParams) {
 	
-		this(config, 0);
+		this(cryptoParams, 0);
 	}
 	
 	
@@ -185,13 +181,11 @@ public class SRP6ServerSession extends SRP6Session {
 			throw new IllegalStateException("State violation: Session must be in INIT state");
 		
 		// Generate server private and public values
-		k = SRP6Routines.computeK(digest, config.N, config.g);
-		digest.reset();
+		k = SRP6Routines.computeK(getHashRoutine().getMessageDigestInstance(), cryptoParams.N, cryptoParams.g);
 		
-		b = SRP6Routines.generatePrivateValue(config.N, random);
-		digest.reset();
+		b = SRP6Routines.generatePrivateValue(cryptoParams.N, random);
 		
-		B = SRP6Routines.computePublicServerValue(config.N, config.g, k, v, b);
+		B = SRP6Routines.computePublicServerValue(cryptoParams.N, cryptoParams.g, k, v, b);
 
 		state = State.STEP_1;
 		
@@ -283,55 +277,30 @@ public class SRP6ServerSession extends SRP6Session {
 			throw new SRP6Exception("Session timeout", SRP6Exception.CauseType.TIMEOUT);
 	
 		// Check A validity
-		if (! SRP6Routines.isValidPublicValue(config.N, A))
+		if (! SRP6Routines.isValidPublicValue(cryptoParams.N, A))
 			throw new SRP6Exception("Bad client public value 'A'", SRP6Exception.CauseType.BAD_PUBLIC_VALUE);
 		
 		// Check for previous mock step 1
 		if (noSuchUserIdentity)
 			throw new SRP6Exception("Bad client credentials", SRP6Exception.CauseType.BAD_CREDENTIALS);
 		
-		if (hashedKeysRoutine != null) {
-			URoutineContext hashedKeysContext = new URoutineContext(A, B);
-			u = hashedKeysRoutine.computeU(config, hashedKeysContext);
-		} else {
-			u = SRP6Routines.computeU(digest, config.N, A, B);
-			digest.reset();
-		}
+		URoutineContext hashedKeysContext = new URoutineContext(A, B);
+		u = getHashedKeysRoutine().computeU(cryptoParams, hashedKeysContext);
 		
-		S = SRP6Routines.computeSessionKey(config.N, v, u, A, b);
+		S = SRP6Routines.computeSessionKey(cryptoParams.N, v, u, A, b);
 		
 		// Compute the own client evidence message 'M1'
-		BigInteger computedM1;
-		
-		if (clientEvidenceRoutine != null) {
-		
-			// With custom routine
-			SRP6ClientEvidenceContext ctx = new SRP6ClientEvidenceContext(userID, s, A, B, S);
-			computedM1 = clientEvidenceRoutine.computeClientEvidence(config, ctx);
-		}
-		else {
-			// With default routine
-			computedM1 = SRP6Routines.computeClientEvidence(digest, A, B, S);
-			digest.reset();
-		}
+		SRP6ClientEvidenceContext clientCtx = new SRP6ClientEvidenceContext(userID, s, A, B, S);
+		BigInteger computedM1 = getClientEvidenceRoutine().computeClientEvidence(cryptoParams, clientCtx);
 		
 		if (! computedM1.equals(M1))
 			throw new SRP6Exception("Bad client credentials", SRP6Exception.CauseType.BAD_CREDENTIALS);
 	
 		state = State.STEP_2;
-		
-		
-		if (serverEvidenceRoutine != null) {
-		
-			// With custom routine
-			SRP6ServerEvidenceContext ctx = new SRP6ServerEvidenceContext(A, M1, S);
-			
-			M2 = serverEvidenceRoutine.computeServerEvidence(config, ctx);
-		}
-		else {
-			// With default routine
-			M2 = SRP6Routines.computeServerEvidence(digest, A, M1, S);
-		}
+
+		// Compute the server evidence message 'M2'
+		SRP6ServerEvidenceContext serverCtx = new SRP6ServerEvidenceContext(A, M1, S);
+		M2 = getServerEvidenceRoutine().computeServerEvidence(cryptoParams, serverCtx);
 		
 		updateLastActivityTime();
 		

@@ -5,26 +5,16 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 
+import com.nimbusds.srp6.util.BigIntegerUtils;
+
 
 /**
- * Secure Remote Password (SRP-6a) routines for computing the various protocol 
- * variables and messages.
+ * Secure Remote Password (SRP-6a) routines for computing / generating the
+ * principal cryptographic variables and protocol messages.
  *
- * <p>The routines comply with RFC 5054 (SRP for TLS), with the following 
- * exceptions:
+ * <p>The routines comply with RFC 5054 (SRP for TLS).
  *
- * <ul>
- *     <li>The computation of the password key 'x' is modified to omit the user 
- *         identity 'I' in order to allow for server-side user identity
- *         renaming as well as authentication with multiple alternate
- *         identities.
- *     <li>The evidence messages 'M1' and 'M2' are computed according to Tom 
- *         Wu's paper "SRP-6: Improvements and refinements to the Secure Remote 
- *         Password protocol", table 5, from 2002.
- * </ul>
- *
- * <p>This class contains portions of code from Bouncy Castle's SRP6 
- * implementation.
+ * <p>This class contains code from Bouncy Castle's SRP6 implementation.
  *
  * @author Vladimir Dzhuvinov
  */
@@ -32,7 +22,7 @@ public class SRP6Routines {
 
 	
 	/**
-	 * Computes the SRP-6 multiplier k = H(N | PAD(g))
+	 * Computes the SRP-6 multiplier <code>k = H(N | PAD(g))</code>
 	 *
 	 * <p>Specification: RFC 5054.
 	 *
@@ -51,26 +41,7 @@ public class SRP6Routines {
 	
 	
 	/**
-	 * Generates a random salt 's'.
-	 *
-	 * @param numBytes The number of bytes the salt 's' must have.
-	 *
-	 * @return The salt 's' as a byte array.
-	 */
-	public static byte[] generateRandomSalt(final int numBytes) {
-	
-		SecureRandom random = new SecureRandom();
-		
-		byte[] salt = new byte[numBytes];
-		
-		random.nextBytes(salt);
-		
-		return salt;
-	}
-	
-	
-	/**
-	 * Computes a verifier v = g^x (mod N)
+	 * Computes a verifier <code>v = g^x (mod N)</code>
 	 *
 	 * <p>Specification: RFC 5054.
 	 *
@@ -107,12 +78,12 @@ public class SRP6Routines {
 		BigInteger min = BigInteger.ONE.shiftLeft(minBits - 1);
 		BigInteger max = N.subtract(BigInteger.ONE);
 		
-		return createRandomBigIntegerInRange(min, max, random);               
+		return BigIntegerUtils.createRandomInRange(min, max, random);
 	}
 	
 	
 	/**
-	 * Computes the public client value A = g^a (mod N)
+	 * Computes the public client value <code>A = g^a (mod N)</code>
 	 *
 	 * <p>Specification: RFC 5054.
 	 *
@@ -132,7 +103,8 @@ public class SRP6Routines {
 	
 	
 	/**
-	 * Computes the public server value B = k * v + g^b (mod N)
+	 * Computes the public server value
+	 * <code>B = k * v + g^b (mod N)</code>
 	 *
 	 * <p>Specification: RFC 5054.
 	 *
@@ -177,30 +149,9 @@ public class SRP6Routines {
 	
 	
 	/**
-	 * Computes the random scrambling parameter u = H(PAD(A) | PAD(B))
-	 *
-	 * <p>Specification: RFC 5054.
-	 *
-	 * @param digest The hash function 'H'. Must not be {@code null}.
-	 * @param N      The prime parameter 'N'. Must not be {@code null}.
-	 * @param A      The public client value 'A'. Must not be {@code null}.
-	 * @param B      The public server value 'B'. Must not be {@code null}.
-	 *
-	 * @return The resulting 'u' value.
-	 */
-	public static BigInteger computeU(final MessageDigest digest, 
-	                                  final BigInteger N, 
-	                                  final BigInteger A,
-	                                  final BigInteger B) {
-	                                   
-	                                
-		return BigIntegerUtils.hashPaddedPair(digest, N, A, B);
-	}
-	
-	
-	/**
-	 * Computes the session key S = (B - k * g^x) ^ (a + u * x) (mod N)
-	 * from client-side parameters.
+	 * Computes the session key
+	 * <code>S = (B - k * g^x) ^ (a + u * x) (mod N)</code> from
+	 * client-side parameters.
 	 * 
 	 * <p>Specification: RFC 5054
 	 *
@@ -230,8 +181,8 @@ public class SRP6Routines {
 	
 	
 	/**
-	 * Computes the session key S = (A * v^u) ^ b (mod N) from server-side
-	 * parameters.
+	 * Computes the session key <code>S = (A * v^u) ^ b (mod N)</code> from
+	 * server-side parameters.
 	 *
 	 * <p>Specification: RFC 5054
 	 *
@@ -252,112 +203,11 @@ public class SRP6Routines {
 	
 		return v.modPow(u, N).multiply(A).modPow(b, N);
 	}
-	
-	
+
+
 	/**
-	 * Computes the client evidence message M1 = H(A | B | S)
-	 *
-	 * <p>Specification: Tom Wu's paper "SRP-6: Improvements and 
-	 * refinements to the Secure Remote Password protocol", table 5, from 
-	 * 2002.
-	 *
-	 * @param digest The hash function 'H'. Must not be {@code null}.
-	 * @param A      The public client value 'A'. Must not be {@code null}.
-	 * @param B      The public server value 'B'. Must note be {@code null}.
-	 * @param S      The session key 'S'. Must not be {@code null}.
-	 *
-	 * @return The resulting client evidence message 'M1'.
+	 * Prevents public instantiation.
 	 */
-	public static BigInteger computeClientEvidence(final MessageDigest digest,
-	                                               final BigInteger A,
-	                                               final BigInteger B,
-	                                               final BigInteger S) {
-		
-		digest.update(A.toByteArray());
-		digest.update(B.toByteArray());
-		digest.update(S.toByteArray());
-
-		return new BigInteger(1, digest.digest());
-	}
-	
-	
-	/**
-	 * Computes the server evidence message M2 = H(A | M1 | S)
-	 *
-	 * <p>Specification: Tom Wu's paper "SRP-6: Improvements and 
-	 * refinements to the Secure Remote Password protocol", table 5, from 
-	 * 2002.
-	 *
-	 * @param digest The hash function 'H'. Must not be {@code null}.
-	 * @param A      The public client value 'A'. Must not be {@code null}.
-	 * @param M1     The client evidence message 'M1'. Must not be 
-	 *               {@code null}.
-	 * @param S      The session key 'S'. Must not be {@code null}.
-	 *
-	 * @return The resulting server evidence message 'M2'.
-	 */
-	protected static BigInteger computeServerEvidence(final MessageDigest digest,
-	                                                  final BigInteger A,
-	                                                  final BigInteger M1,
-	                                                  final BigInteger S) {
-	
-		digest.update(A.toByteArray());
-		digest.update(M1.toByteArray());
-		digest.update(S.toByteArray());
-		
-		return new BigInteger(1, digest.digest());
-	}
-	
-	
-
-	
-
-	
-
-	
-	
-	/**
-	 * Returns a random big integer in the specified range [min, max].
-	 *
-	 * @param min    The least value that may be generated. Must not be
-	 *               {@code null}.
-	 * @param max    The greatest value that may be generated. Must not be
-	 *               {@code null}.
-	 * @param random Source of randomness. Must not be {@code null}.
-	 *
-	 * @return A random big integer in the range [min, max].
-	 */
-	protected static BigInteger createRandomBigIntegerInRange(final BigInteger min, 
-	                                                          final BigInteger max,
-	                                                          final SecureRandom random) {
-	
-		final int cmp = min.compareTo(max);
-		
-		if (cmp >= 0) {
-			
-			if (cmp > 0)
-				throw new IllegalArgumentException("'min' may not be greater than 'max'");
-		
-			return min;
-		}
-
-		if (min.bitLength() > max.bitLength() / 2)
-			return createRandomBigIntegerInRange(BigInteger.ZERO, max.subtract(min), random).add(min);
-		
-		final int MAX_ITERATIONS = 1000;
-		
-		for (int i = 0; i < MAX_ITERATIONS; ++i) {
-		
-			BigInteger x = new BigInteger(max.bitLength(), random);
-			
-			if (x.compareTo(min) >= 0 && x.compareTo(max) <= 0)
-				return x;
-		}
-
-		// fall back to a faster (restricted) method
-		return new BigInteger(max.subtract(min).bitLength() - 1, random).add(min);
-	}
-
 	private SRP6Routines() {
 		// empty
 	}

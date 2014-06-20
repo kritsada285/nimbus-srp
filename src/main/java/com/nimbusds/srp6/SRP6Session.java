@@ -2,7 +2,6 @@ package com.nimbusds.srp6;
 
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,15 +18,9 @@ public abstract class SRP6Session {
 	
 
 	/**
-	 * The crypto configuration.
+	 * The crypto parameters.
 	 */
-	protected SRP6CryptoParams config;
-	
-	
-	/**
-	 * The message digest (not thread-safe).
-	 */
-	protected MessageDigest digest;
+	protected SRP6CryptoParams cryptoParams;
 	
 	
 	/**
@@ -42,13 +35,13 @@ public abstract class SRP6Session {
 	 * within the specified time the session will be closed. Zero implies
 	 * no timeout.
 	 */
-	protected final int timeout;
+	private final int timeout;
 	
 	
 	/**
 	 * The last activity timestamp, from System.currentTimeMillis().
 	 */
-	protected long lastActivity;
+	private long lastActivity;
 	
 	
 	/**
@@ -91,36 +84,42 @@ public abstract class SRP6Session {
 	 * The shared session key 'S'.
 	 */
 	protected BigInteger S = null;
-	
-	
+
+
 	/**
 	 * The client evidence message 'M1'.
 	 */
 	protected BigInteger M1 = null;
-	
-	
+
+
 	/**
 	 * The server evidence message 'M2'.
 	 */
 	protected BigInteger M2 = null;
-	
-	
+
+
 	/**
-	 * Routine for the client evidence message 'M1' computation.
+	 * Routine for hashing the SRP messages.
 	 */
-	protected ClientEvidenceRoutine clientEvidenceRoutine = DefaultRoutines.getInstance();
-	
-	
-	/**
-	 * Routine for the server evidence message 'M2' computation.
-	 */
-	protected ServerEvidenceRoutine serverEvidenceRoutine = DefaultRoutines.getInstance();
+	private HashRoutine hashRoutine = DefaultRoutines.getInstance();
 
 
 	/**
 	 * Routine for the hashed keys 'u' computation.
 	 */
-	protected URoutine hashedKeysRoutine = DefaultRoutines.getInstance();
+	private URoutine hashedKeysRoutine = DefaultRoutines.getInstance();
+
+
+	/**
+	 * Routine for the client evidence message 'M1' computation.
+	 */
+	private ClientEvidenceRoutine clientEvidenceRoutine = DefaultRoutines.getInstance();
+
+
+	/**
+	 * Routine for the server evidence message 'M2' computation.
+	 */
+	private ServerEvidenceRoutine serverEvidenceRoutine = DefaultRoutines.getInstance();
 
 
 	/**
@@ -203,7 +202,7 @@ public abstract class SRP6Session {
 	 */
 	public SRP6CryptoParams getCryptoParams() {
 	
-		return config;
+		return cryptoParams;
 	}
 	
 	
@@ -227,6 +226,34 @@ public abstract class SRP6Session {
 	public int getTimeout() {
 	
 		return timeout;
+	}
+
+
+	/**
+	 * Sets the principal hash 'H' routine. Must be set prior to
+	 * {@link SRP6ClientSession.State#STEP_2} or
+	 * {@link SRP6ServerSession.State#STEP_1}.
+	 *
+	 * @param hRoutine The principal hash 'H' routine. Must not be
+	 *                 {@code null}.
+	 */
+	public void setHashRoutine(final HashRoutine hRoutine) {
+
+		if (hRoutine == null)
+			throw new IllegalArgumentException("The hash 'H' routine must not be null");
+
+		hashRoutine = hRoutine;
+	}
+
+
+	/**
+	 * Gets the principal hash 'H' routine.
+	 *
+	 * @return The principal hash 'H' routine.
+	 */
+	public HashRoutine getHashRoutine() {
+
+		return hashRoutine;
 	}
 	
 	
@@ -287,30 +314,31 @@ public abstract class SRP6Session {
 
 
 	/**
-	 * Gets the custom routine to compute hashed keys 'u' a 'H(A | B)'.
-	 * 
-	 * @return The routine instance or {@code null} if the default
-	 *         {@link SRP6Routines#computeU} is to be used.
-	 */
-	public URoutine getHashedKeysRoutine() {
-
-		return hashedKeysRoutine;
-	}
-
-
-	/**
-	 * Sets a routine to compute the hashed keys 'u' as 'H(A | B)'. Must be
-	 * set prior to {@link SRP6ServerSession.State#STEP_2}.
-	 * 
-	 * @param uRoutine The hashed keys 'u' routine. Must not be
-	 *                 {@code null}.
+	 * Sets the custom routine to compute the random scrambling parameter
+	 * 'u' as 'H(A | B)'. Must be set prior to
+	 * {@link SRP6ServerSession.State#STEP_2}.
+	 *
+	 * @param uRoutine The random scrambling parameter 'u' routine. Must
+	 *                 not be {@code null}.
 	 */
 	public void setHashedKeysRoutine(final URoutine uRoutine) {
 
 		if (uRoutine == null)
-			throw new IllegalArgumentException("The hased keys 'u' routine must not be null");
+			throw new IllegalArgumentException("The hashed keys 'u' routine must not be null");
 
 		this.hashedKeysRoutine = uRoutine;
+	}
+
+
+	/**
+	 * Gets the custom routine to compute the random scrambling parameter
+	 * 'u' as 'H(A | B)'.
+	 *
+	 * @return The random scrambling parameter 'u' routine.
+	 */
+	public URoutine getHashedKeysRoutine() {
+
+		return hashedKeysRoutine;
 	}
 
 
@@ -388,8 +416,7 @@ public abstract class SRP6Session {
 			return null;
 	
 		if (doHash) {
-			digest.reset();
-			return new BigInteger(digest.digest(S.toByteArray()));
+			return new BigInteger(hashRoutine.hash(S.toByteArray()));
 		} else {
 			return S;
 		}
