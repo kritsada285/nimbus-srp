@@ -30,6 +30,55 @@ import com.nimbusds.srp6.PasswordKeyRoutine;
 public class PBKDF2Routine implements PasswordKeyRoutine {
 
 
+	/**
+	 * The default iteration count (20 thousand).
+	 */
+	public static final int DEFAULT_ITERATION_COUNT = 20000;
+
+
+	/**
+	 * The iteration count.
+	 */
+	private final int iterations;
+
+
+	/**
+	 * Creates a new password key 'x' routine based on PBKDF2 and using the
+	 * {@link #DEFAULT_ITERATION_COUNT default iteration count}.
+	 */
+	public PBKDF2Routine() {
+
+		this(DEFAULT_ITERATION_COUNT);
+	}
+
+
+	/**
+	 * Creates a new password key 'x' routine based on PBKDF2 and using the
+	 * specified iteration count.
+	 *
+	 * @param iterations The iterations, must be at least 1000.
+	 */
+	public PBKDF2Routine(final int iterations) {
+
+		if (iterations < 1000) {
+			throw new IllegalArgumentException("The iteration count must be at least 1000");
+		}
+
+		this.iterations = iterations;
+	}
+
+
+	/**
+	 * Returns the PBKDF2 iteration count.
+	 *
+	 * @return The PKBDF2 iterations.
+	 */
+	public int getIterations() {
+
+		return iterations;
+	}
+
+
 	@Override
 	public BigInteger computeX(byte[] salt, byte[] username, byte[] password) {
 
@@ -38,10 +87,9 @@ public class PBKDF2Routine implements PasswordKeyRoutine {
 		final String algorithm = "PBKDF2WithHmacSHA1";
 
 		// SHA-1 generates 160 bit hashes, so that's what makes sense here
-		int derivedKeyLength = 160;
+		final int derivedKeyLength = 160;
 		// Pick an iteration count that works for you. The NIST recommends at
 		// least 1,000 iterations:
-		int iterations = 20000;
 
 		KeySpec spec = new PBEKeySpec(
 			new String(password, Charset.forName("UTF-8")).toCharArray(),
