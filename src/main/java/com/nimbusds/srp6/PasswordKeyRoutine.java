@@ -15,7 +15,7 @@ import java.math.BigInteger;
  * exactly the same routine is used to generate the verifier 'v' and by client
  * authentication sessions later, else authentication will fail.
  *
- * <p>For another sample implementation see {@link SHA1PasswordKeyRoutineWithUserIdentity}
+ * <p>For another sample implementation see {@link com.nimbusds.srp6.alt.SHA1PasswordKeyRoutineWithUserIdentity}
  * which computes <code>x = H(s | H(I | ":" | P))</code>
  *
  * @author Vladimir Dzhuvinov

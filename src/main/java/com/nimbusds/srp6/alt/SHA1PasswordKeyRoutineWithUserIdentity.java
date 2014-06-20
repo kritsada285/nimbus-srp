@@ -1,8 +1,11 @@
-package com.nimbusds.srp6;
+package com.nimbusds.srp6.alt;
 
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+
+import com.nimbusds.srp6.DefaultRoutines;
+import com.nimbusds.srp6.PasswordKeyRoutine;
 
 
 /**
@@ -12,8 +15,8 @@ import java.security.MessageDigest;
  * 
  * <p>Specification: RFC 5054.
  *
- * <p>This routine can be passed to the {@link SRP6VerifierGenerator} and
- * {@link SRP6ClientSession} to replace the
+ * <p>This routine can be passed to the {@link com.nimbusds.srp6.SRP6VerifierGenerator} and
+ * {@link com.nimbusds.srp6.SRP6ClientSession} to replace the
  * {@link com.nimbusds.srp6.DefaultRoutines#computeX default routine}
  * <code>x = H(s | H(P))</code>.
  *

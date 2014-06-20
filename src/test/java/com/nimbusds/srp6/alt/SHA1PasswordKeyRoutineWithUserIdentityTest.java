@@ -1,8 +1,11 @@
-package com.nimbusds.srp6;
+package com.nimbusds.srp6.alt;
 
 
 import java.math.BigInteger;
 
+import com.nimbusds.srp6.PasswordKeyRoutine;
+import com.nimbusds.srp6.SRP6CryptoParams;
+import com.nimbusds.srp6.SRP6VerifierGenerator;
 import com.nimbusds.srp6.util.BigIntegerUtils;
 import junit.framework.TestCase;
 
