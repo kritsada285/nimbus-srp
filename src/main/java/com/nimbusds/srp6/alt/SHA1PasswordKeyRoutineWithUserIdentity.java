@@ -15,7 +15,8 @@ import com.nimbusds.srp6.PasswordKeyRoutine;
  * 
  * <p>Specification: RFC 5054.
  *
- * <p>This routine can be passed to the {@link com.nimbusds.srp6.SRP6VerifierGenerator} and
+ * <p>This routine can be passed to the
+ * {@link com.nimbusds.srp6.SRP6VerifierGenerator} and
  * {@link com.nimbusds.srp6.SRP6ClientSession} to replace the
  * {@link com.nimbusds.srp6.DefaultRoutines#computeX default routine}
  * <code>x = H(s | H(P))</code>.

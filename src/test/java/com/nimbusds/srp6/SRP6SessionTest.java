@@ -16,25 +16,17 @@ public class SRP6SessionTest extends TestCase {
 	
 	public void testAuthSuccess() {
 	
-		// System.out.println("*** Test successful authentication ***");
-		
 		// username + password
 		String username = "alice";
 		String password = "secret";
 		
-		
 		// crypto params
 		SRP6CryptoParams config = SRP6CryptoParams.getInstance();
-		
 		
 		// Generate verifier
 		SRP6VerifierGenerator verifierGen = new SRP6VerifierGenerator(config);
 		BigInteger s = new BigInteger(SRP6VerifierGenerator.generateRandomSalt());
 		BigInteger v = verifierGen.generateVerifier(s, username, password);
-		
-		// System.out.println("Salt 's': " + s.toString(16));
-		// System.out.println("Verifier 'v': " + v.toString(16));
-		
 		
 		// Init client and server
 		SRP6ClientSession client = new SRP6ClientSession();
@@ -55,7 +47,6 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(DefaultRoutines.getInstance(), server.getHashedKeysRoutine());
 		assertEquals(0, server.getTimeout());
 		
-		
 		// Step ONE
 		client.step1(username, password);
 		BigInteger B = server.step1(username, s, v);
@@ -66,11 +57,6 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(username, client.getUserID());
 
 		assertEquals(s, server.getSalt());
-
-		// System.out.println("Client -> Server: Username: " + username);
-		// System.out.println("Server -> Client: B: " + B.toString(16));
-		// System.out.println("Server -> Client: salt: " + new
-		// BigInteger(s).toString(16));
 		
 		// Step TWO
 		
@@ -99,10 +85,6 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(cred.A, server.getPublicClientValue());
 		assertNotNull(server.getServerEvidenceMessage());
 		
-		// System.out.println("Client -> Server: A : " + cred.A.toString(16));
-		// System.out.println("Client -> Server: M1: " + cred.M1.toString(16));
-		// System.out.println("Server -> Client: M2: " + M2.toString(16));
-		
 		// STEP THREE
 		
 		try {
@@ -115,8 +97,6 @@ public class SRP6SessionTest extends TestCase {
 		assertEquals(SRP6ClientSession.State.STEP_3, client.getState());
 
 		assertNotNull(client.getClientEvidenceMessage());
-		
-		// System.out.println("Auth success");
 	}
 
 
