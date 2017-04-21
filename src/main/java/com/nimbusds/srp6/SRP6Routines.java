@@ -444,7 +444,7 @@ public class SRP6Routines implements Serializable {
 		return new BigInteger(max.subtract(min).bitLength() - 1, random).add(min);
 	}
 
-	SRP6Routines() {
+	public SRP6Routines() {
 		// empty
 	}
 }
