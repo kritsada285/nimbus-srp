@@ -73,9 +73,15 @@ public class ProtocolTest extends TestCase {
 
     public void testFpClientWithOOServer() throws Exception {
         BigInteger salt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
-        final BigInteger v = SRP6aProtocol.generateVerifier(SRP6aProtocol.Parameters.of(srp6CryptoParams), XRoutineOriginal::apply, salt, username, password);
+        final BigInteger v = SRP6aProtocol.generateVerifier(
+                SRP6aProtocol.Parameters.of(srp6CryptoParams),
+                XRoutineOriginal::apply,
+                salt,
+                username,
+                password);
 
         final SRP6ServerSession serverSession = new SRP6ServerSession(srp6CryptoParams);
+
         final BigInteger B = serverSession.step1(username, salt, v);
 
         final SRP6aProtocol.ClientSession clientSession = SRP6aProtocol.generateProofClient(
@@ -100,13 +106,26 @@ public class ProtocolTest extends TestCase {
 
     public void testFpServerWithOOClient() throws Exception {
         BigInteger originalSalt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
+
         final SRP6ClientSession originalClientSession = new SRP6ClientSession();
+
         final BigInteger originalVerifier = (new SRP6VerifierGenerator(srp6CryptoParams)).generateVerifier(originalSalt, username, password);
-        final SRP6aProtocol.ServerChallenge serverChallenge = SRP6aProtocol.generateServerChallenge(p, secureRandom, RandomKeyRoutines::randomKeyRfc50504, originalVerifier);
+
+        final SRP6aProtocol.ServerChallenge serverChallenge = SRP6aProtocol.generateServerChallenge(
+                p,
+                secureRandom,
+                RandomKeyRoutines::randomKeyRfc50504,
+                originalVerifier);
+
         originalClientSession.step1(username, password);
+
         SRP6ClientCredentials clientCredentials = originalClientSession.step2(srp6CryptoParams, originalSalt, serverChallenge.B);
+
         SRP6aProtocol.ServerSession serverSession = SRP6aProtocol.generateServerProof(p, URoutineFunctionOriginal::apply, originalVerifier, serverChallenge, clientCredentials);
+
         assertEquals(originalClientSession.getSessionKey(), serverSession.secretKeyRaw());
+
         originalClientSession.step3(serverSession.proof());
+
     }
 }
