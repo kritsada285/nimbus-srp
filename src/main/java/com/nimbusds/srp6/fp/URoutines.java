@@ -11,6 +11,10 @@ public class URoutines {
             this.A = A;
             this.B = B;
         }
+
+        public static URoutineArguments of(final BigInteger A, final BigInteger B) {
+            return new URoutineArguments(A, B);
+        }
     }
 
     public static URoutineArguments args(final BigInteger A, final BigInteger B) {

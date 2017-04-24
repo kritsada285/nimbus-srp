@@ -73,7 +73,7 @@ src/                      The source code.
 
 ### version 1.2 (2011-11-18)
 * Enables storage of arbitrary SRP-6a auth session attributes.
-* Adds session 'A', 'B', 'M1' and 'M2' getter methods.
+* Adds session 'A', 'S', 'M1' and 'M2' getter methods.
 
 ### version 1.3 (2011-11-28)
 * Adds command-line SRP-6a verifier generator, server and client.
