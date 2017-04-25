@@ -10,11 +10,11 @@ import junit.framework.TestCase;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Optional;
 
 
 public class ProtocolTest extends TestCase {
-
-
 
     public void testXRoutineOriginal() throws Exception {
 
@@ -97,17 +97,52 @@ public class ProtocolTest extends TestCase {
                 B
                 );
 
-        final BigInteger expectedM2 = serverSession.step2(clientSession.credentials.A, clientSession.credentials.M1);
+        final BigInteger expectedM2 = serverSession.step2(
+                clientSession.credentials.A,
+                clientSession.credentials.M1);
 
-        final BigInteger actualM2 = EvidenceRoutines.ServerEvidenceRoutine.apply(p, ServerEvidenceRoutineArguments.of(clientSession.credentials.A, clientSession.credentials.M1, clientSession.S));
+        final BigInteger actualM2 = EvidenceRoutines.ServerEvidenceRoutine.apply(
+                p,
+                ServerEvidenceRoutineArguments.of(
+                        clientSession.credentials.A,
+                        clientSession.credentials.M1,
+                        clientSession.S));
 
         assertEquals(expectedM2, actualM2);
     }
 
+    public void testFpClientSessionWithOOServer() throws Exception {
+        BigInteger salt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
+
+        final BigInteger v = SRP6aProtocol.generateVerifier(
+                SRP6aProtocol.Parameters.of(srp6CryptoParams),
+                XRoutineOriginal::apply,
+                salt,
+                username,
+                password);
+
+        final SRP6ServerSession serverSession = new SRP6ServerSession(srp6CryptoParams);
+
+        final BigInteger B = serverSession.step1(username, salt, v);
+
+        final ClientSession fpAdapter = new ClientSession(srp6CryptoParams, Optional.empty());
+
+        fpAdapter.step1(username, password);
+
+        final SRP6ClientCredentials clientCredentials = fpAdapter.step2(srp6CryptoParams, salt, B);
+
+        final BigInteger M2 = serverSession.step2(clientCredentials.A, clientCredentials.M1);
+
+        fpAdapter.step3(M2);
+
+    }
+
     public void testFpServerWithOOClient() throws Exception {
-        BigInteger originalSalt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
+        final BigInteger originalSalt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
 
         final SRP6ClientSession originalClientSession = new SRP6ClientSession();
+
+        originalClientSession.step1(username, password);
 
         final BigInteger originalVerifier = (new SRP6VerifierGenerator(srp6CryptoParams)).generateVerifier(originalSalt, username, password);
 
@@ -117,15 +152,67 @@ public class ProtocolTest extends TestCase {
                 RandomKeyRoutines::randomKeyRfc50504,
                 originalVerifier);
 
-        originalClientSession.step1(username, password);
 
-        SRP6ClientCredentials clientCredentials = originalClientSession.step2(srp6CryptoParams, originalSalt, serverChallenge.B);
+        final SRP6ClientCredentials clientCredentials = originalClientSession.step2(srp6CryptoParams, originalSalt, serverChallenge.B);
 
-        SRP6aProtocol.ServerSession serverSession = SRP6aProtocol.generateServerProof(p, URoutineFunctionOriginal::apply, originalVerifier, serverChallenge, clientCredentials);
+        final SRP6aProtocol.ServerSession serverSession = SRP6aProtocol.generateServerProof(
+                p,
+                URoutineFunctionOriginal::apply,
+                originalVerifier,
+                serverChallenge,
+                username,
+                clientCredentials);
 
         assertEquals(originalClientSession.getSessionKey(), serverSession.secretKeyRaw());
 
-        originalClientSession.step3(serverSession.proof());
+        final byte[] cKey = originalClientSession.getSessionKeyHash();
+        final byte[] sKey = serverSession.secretKeyHashed();
 
+        assertNotNull("originalClientSession.getSessionKeyHash()", cKey);
+
+        assertNotNull("serverSession.secretKeyHashed()", sKey);
+
+        assertTrue(str(cKey)+"\n"+str(sKey), Arrays.equals(cKey, sKey));
+
+        originalClientSession.step3(serverSession.proof());
+    }
+
+    public void testFpServerSessionWithOOClient() throws Exception {
+        final BigInteger originalSalt = SaltRoutines.SaltRoutineRandomBigInteger.get(secureRandom, p);
+
+        final SRP6ClientSession originalClientSession = new SRP6ClientSession();
+
+        originalClientSession.step1(username, password);
+
+        final BigInteger originalVerifier = (new SRP6VerifierGenerator(srp6CryptoParams)).generateVerifier(originalSalt, username, password);
+
+        final SeverSession serverAdapter = new SeverSession(srp6CryptoParams, Optional.empty());
+
+        final BigInteger B = serverAdapter.step1(username, originalSalt, originalVerifier);
+
+        final SRP6ClientCredentials clientCredentials = originalClientSession.step2(srp6CryptoParams, originalSalt, B);
+
+        final BigInteger M2 = serverAdapter.step2(clientCredentials.A, clientCredentials.M1);
+
+        originalClientSession.step3(M2);
+
+        assertEquals(originalClientSession.getSessionKey(), serverAdapter.getSessionKey());
+
+        final byte[] cKey = originalClientSession.getSessionKeyHash();
+        final byte[] sKey = serverAdapter.getSessionKeyHash();
+
+        assertNotNull("originalClientSession.getSessionKeyHash()", cKey);
+        assertNotNull("serverAdapter.getSessionKeyHash()", sKey);
+
+        assertTrue(str(cKey)+"\n"+str(sKey), Arrays.equals(cKey, sKey));
+    }
+
+    public static String str(byte[] cKey) {
+        StringBuffer str = new StringBuffer();
+        for( byte b : cKey) {
+            str.append(b);
+            str.append(',');
+        }
+        return str.toString();
     }
 }

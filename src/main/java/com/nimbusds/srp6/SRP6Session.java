@@ -235,7 +235,7 @@ public abstract class SRP6Session implements Serializable {
 	 * Gets the SRP-6a authentication session timeout.
 	 *
 	 * @return The SRP-6a authentication session timeout, in seconds. Zero
-	 *         implies to timeout.
+	 *         implies no timeout. Use hasTimedOut to check time remaining.
 	 */
 	public int getTimeout() {
 	

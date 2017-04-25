@@ -94,7 +94,7 @@ public class SRP6aProtocol {
         }
         public byte[] secretKeyHashed(){
             p.digest.reset();
-            p.digest.update(this.S.toByteArray());
+            p.digest.update(BigIntegerUtils.bigIntegerToBytes(S));
             return p.digest.digest();
         }
 
@@ -294,7 +294,8 @@ public class SRP6aProtocol {
             final BiFunction<Parameters, URoutines.URoutineArguments, BigInteger> uRoutineFunction,
             final BigInteger v,
             final ServerChallenge challenge,
-            final SRP6ClientCredentials clientCredentials) throws SRP6Exception {
+            final Credentials clientCredentials
+    ) throws SRP6Exception {
         checkValidA(p, clientCredentials.A);
         checkParameters(p);
         checkNotNullOrLessThanOne("v", v);
@@ -304,6 +305,16 @@ public class SRP6aProtocol {
         if( M1.compareTo(clientCredentials.M1) != 0) throw new SRP6Exception("Bad client credentials", SRP6Exception.CauseType.BAD_CREDENTIALS);
         BigInteger M2 = EvidenceRoutines.ServerEvidenceRoutine.apply(p, EvidenceRoutines.ServerEvidenceRoutineArguments.of(clientCredentials.A, M1, S));
         return new ServerSession(p, S, M2);
+    }
+
+    public static ServerSession generateServerProof(
+            final Parameters p,
+            final BiFunction<Parameters, URoutines.URoutineArguments, BigInteger> uRoutineFunction,
+            final BigInteger v,
+            final ServerChallenge challenge,
+            final String userId,
+            final SRP6ClientCredentials clientCredentials) throws SRP6Exception {
+        return generateServerProof(p, uRoutineFunction, v, challenge, new Credentials(userId, clientCredentials.A, clientCredentials.M1));
     }
 
     private static void checkValidA(final Parameters p, final BigInteger A) {

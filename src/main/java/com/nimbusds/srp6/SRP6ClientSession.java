@@ -1,11 +1,9 @@
 package com.nimbusds.srp6;
 
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
-
 
 /**
  * Stateful client-side Secure Remote Password (SRP-6a) authentication session.
@@ -246,20 +244,17 @@ public class SRP6ClientSession extends SRP6Session implements Serializable {
 		
 		if (digest == null)
 			throw new IllegalArgumentException("Unsupported hash algorithm 'H': " + config.H);
-		
-		
+
 		if (s == null)
 			throw new IllegalArgumentException("The salt 's' must not be null");
 			
 		this.s = s;
 		
-		
 		if (B == null)
 			throw new IllegalArgumentException("The public server value 'B' must not be null");
 		
 		this.B = B;
-		
-		
+
 		// Check current state
 		if (state != State.STEP_1)
 			throw new IllegalStateException("State violation: Session must be in STEP_1 state");
