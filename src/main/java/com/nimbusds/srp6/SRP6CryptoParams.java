@@ -120,31 +120,29 @@ public class SRP6CryptoParams implements Serializable {
 		if (H == null || H.isEmpty())
 			throw new IllegalArgumentException("Undefined hash algorithm 'H'");
 
-		if (bitsize == 256)
-			return new SRP6CryptoParams(N_256, g_common, H);
+		switch (bitsize) {
+			case 256:
+				return new SRP6CryptoParams(N_256, g_common, H);
+			case 512:
+				return new SRP6CryptoParams(N_512, g_common, H);
+			case 768:
+				return new SRP6CryptoParams(N_768, g_common, H);
+			case 1024:
+				return new SRP6CryptoParams(N_1024, g_common, H);
+			case 1536:
+				return new SRP6CryptoParams(N_1536, g_common, H);
+			case 2048:
+				return new SRP6CryptoParams(N_2048, g_common, H);
 		
-		else if (bitsize == 512)
-			return new SRP6CryptoParams(N_512, g_common, H);
-			
-		else if (bitsize == 768)
-			return new SRP6CryptoParams(N_768, g_common, H);
-			
-		else if (bitsize == 1024)
-			return new SRP6CryptoParams(N_1024, g_common, H);
-
-		else if (bitsize == 1536)
-			return new SRP6CryptoParams(N_1536, g_common, H);
-
-		else if (bitsize == 2048)
-			return new SRP6CryptoParams(N_2048, g_common, H);
-		
-		else
-			return null;
+				return new SRP6CryptoParams(N_3072, g_common, H);
+			default:
+				return null;
+		}
 	}
-	
-	
+
+
 	/**
-	 * Returns an SRP-6a crypto parameters instance with precomputed 
+	 * Returns an SRP-6a crypto parameters instance with precomputed
 	 * 512-bit prime 'N', matching 'g' value and "SHA-1" hash algorithm.
 	 *
 	 * @return SRP-6a crypto parameters instance with 512-bit prime 'N',
