@@ -122,7 +122,11 @@ public abstract class SRP6Tool {
 		println(prefix + "\t3 = select precomputed 768-bit");
 		println(prefix + "\t4 = select precomputed 1024-bit");
 		println(prefix + "\t5 = select precomputed 2048-bit");
-		println(prefix + "\t6 = enter prime 'N' and generator 'g'");
+		println(prefix + "\t6 = select precomputed 3072-bit");
+		println(prefix + "\t7 = select precomputed 4096-bit");
+		println(prefix + "\t8 = select precomputed 6144-bit");
+		println(prefix + "\t9 = select precomputed 8192-bit");
+		println(prefix + "\t10 = enter prime 'N' and generator 'g'");
 		println();
 		print(prefix + "Your choice [1]: ");
 		
@@ -156,6 +160,22 @@ public abstract class SRP6Tool {
 				g = SRP6CryptoParams.g_common;
 				break;
 			case "6":
+				N = SRP6CryptoParams.N_3072;
+				g = SRP6CryptoParams.g_large;
+				break;
+			case "7":
+				N = SRP6CryptoParams.N_4096;
+				g = SRP6CryptoParams.g_large;
+				break;
+			case "8":
+				N = SRP6CryptoParams.N_6144;
+				g = SRP6CryptoParams.g_large;
+				break;
+			case "9":
+				N = SRP6CryptoParams.N_8192;
+				g = SRP6CryptoParams.g_x_large;
+				break;
+			case "10":
 				println();
 				print(prefix + "Enter prime 'N' (hex): ");
 				N = readBigInteger();
