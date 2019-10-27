@@ -191,7 +191,7 @@ public abstract class SRP6Tool {
 	}
 
 	protected void println(String msg){
-		println(msg);
+		System.out.print(msg);
 	}
 
 	void logShash(byte[] sessionKeyHash) {
