@@ -126,6 +126,7 @@ src/                      The source code.
   #20).
 
 ### version 2.0.3 (2017-04-22)
-* Fixes a bug where the console output of SRP6Tool bug leads to a StackOverflowError (issue #21).
+* Fixes a bug where the console output of SRP6Tool bug leads to a StackOverflowError (issue #21)
+  by Cédric Servais.
 
 [EOF]
