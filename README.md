@@ -125,5 +125,8 @@ src/                      The source code.
   requirements defined in RFC 5054. The routine efficiency is improved (issue 
   #20).
 
+### version 2.1.0 (2019-XX-YY)
+* Add support for larger RFC 5054 bit lengths (issue #22) by Jase Bleazard.
+
 
 [EOF]
