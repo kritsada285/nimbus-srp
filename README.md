@@ -125,8 +125,8 @@ src/                      The source code.
   requirements defined in RFC 5054. The routine efficiency is improved (issue 
   #20).
 
-### version 2.0.3 (2019-XX-YY)
-* Fixes a bug where the console output of SRP6Tool bug leads to a StackOverflowError (issue #21)
-  by Cédric Servais.
+### version 2.0.3 (2019-11-04)
+* Fixes a bug where the console output of SRP6Tool bug leads to a 
+  StackOverflowError (issue #21) by Cédric Servais.
 
 [EOF]
