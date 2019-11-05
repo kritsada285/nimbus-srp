@@ -20,8 +20,11 @@ public class SRP6CryptoParamsTest extends TestCase {
 		assertTrue(SRP6CryptoParams.N_1024.isProbablePrime(15));
 		assertTrue(SRP6CryptoParams.N_1536.isProbablePrime(15));
 		assertTrue(SRP6CryptoParams.N_2048.isProbablePrime(15));
+		assertTrue(SRP6CryptoParams.N_3072.isProbablePrime(15));
+		assertTrue(SRP6CryptoParams.N_4096.isProbablePrime(15));
+		assertTrue(SRP6CryptoParams.N_6144.isProbablePrime(15));
+		assertTrue(SRP6CryptoParams.N_8192.isProbablePrime(15));
 	}
-
 
 	public void testIllegalGeneratorArg() {
 

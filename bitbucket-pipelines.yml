@@ -10,5 +10,5 @@ image: maven:3.3.3
 pipelines:
   default:
     - step:
-        script: # Modify the commands below to build your repository.
-          - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package 
+        script: # Modify the commands below to build your repository. sonar:sonar -B -e -V -Dsonar.host.url=https://sonarqube.com -Dsonar.login=$SONAR_TOKEN
+          - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package

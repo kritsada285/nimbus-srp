@@ -129,4 +129,5 @@ src/                      The source code.
 * Fixes a bug where the console output of SRP6Tool bug leads to a 
   StackOverflowError (issue #21) by Cédric Servais.
 
-[EOF]
+### version 2.1.0 (2019-11-05)
+* Adds support for larger RFC 5054 bit lengths (issue #22) by Jase Bleazard.
