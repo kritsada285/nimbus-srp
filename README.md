@@ -4,7 +4,7 @@
 
 # Nimbus SRP: Secure Remote Password (SRP-6a) protocol implementation for Java
 
-Copyright (c) Connect2id Ltd. and others, 2011 - 2017
+Copyright (c) Connect2id Ltd. and others, 2011 - 2019
 
 ## README
 
